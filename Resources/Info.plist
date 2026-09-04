@@ -10,6 +10,8 @@
     <string>com.mauriziopremici.leanwave</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
+    <key>CFBundleIconFile</key>
+    <string>Leanwave</string>
     <key>CFBundleName</key>
     <string>Leanwave</string>
     <key>CFBundlePackageType</key>

@@ -62,6 +62,10 @@ public final class ChromeController {
         }
     }
 
+    public func openYouTube() throws {
+        _ = try executor.execute(ChromeScriptBuilder.openYouTube)
+    }
+
     public func findTab(matching url: YouTubeURL) throws -> ChromeTabReference? {
         let response = try executor.execute(ChromeScriptBuilder.listTabs)
         return ChromeScriptBuilder.parseTabs(response).first {

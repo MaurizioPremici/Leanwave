@@ -49,6 +49,12 @@ final class ChromeControllerTests: XCTestCase {
         XCTAssertEqual(match?.windowID, 84)
         XCTAssertEqual(match?.tabIndex, 2)
     }
+
+    func testOpensYouTubeInGoogleChrome() throws {
+        let executor = RecordingScriptExecutor(responses: [""])
+        try ChromeController(executor: executor).openYouTube()
+        XCTAssertEqual(executor.sources, [ChromeScriptBuilder.openYouTube])
+    }
 }
 
 private final class RecordingScriptExecutor: AppleScriptExecuting {

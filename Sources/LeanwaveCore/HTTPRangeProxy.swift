@@ -66,7 +66,7 @@ final class HTTPRangeProxy: @unchecked Sendable {
         transfer.executableURL = URL(fileURLWithPath: "/usr/bin/curl")
         var arguments = [
             "--silent", "--show-error", "--location", "--http1.1", "--include", "--raw",
-            "--connect-timeout", "10", "--max-time", "30",
+            "--connect-timeout", "10", "--max-time", "120",
         ]
         if request.hasPrefix("HEAD ") { arguments.append("--head") }
         for (name, value) in headers { arguments += ["--header", "\(name): \(value)"] }
@@ -82,7 +82,7 @@ final class HTTPRangeProxy: @unchecked Sendable {
             .components(separatedBy: "-")
             .first
         let start = startText.flatMap(Int64.init) ?? 0
-        let end = start + 256 * 1_024 - 1
+        let end = start + 1_024 * 1_024 - 1
         arguments += ["--header", "Range: bytes=\(start)-\(end)"]
         arguments += ["--", remoteURL.absoluteString]
         transfer.arguments = arguments

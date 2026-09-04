@@ -4,9 +4,11 @@ public enum MPVLaunchConfiguration {
     public static func arguments(
         url: String,
         socketPath: String,
-        ytdlpPath _: String
+        ytdlpPath _: String,
+        httpHeaders: [String: String] = [:],
+        mediaTitle: String? = nil
     ) -> [String] {
-        [
+        var arguments = [
             "--no-video",
             "--force-window=no",
             "--input-ipc-server=\(socketPath)",
@@ -16,8 +18,22 @@ public enum MPVLaunchConfiguration {
             "--demuxer-max-bytes=16MiB",
             "--demuxer-max-back-bytes=4MiB",
             "--idle=no",
-            url,
         ]
+        if let userAgent = header("User-Agent", in: httpHeaders) {
+            arguments.append("--user-agent=\(userAgent)")
+        }
+        if let referer = header("Referer", in: httpHeaders) {
+            arguments.append("--referrer=\(referer)")
+        }
+        if let mediaTitle, !mediaTitle.isEmpty {
+            arguments.append("--force-media-title=\(mediaTitle)")
+        }
+        arguments.append(url)
+        return arguments
+    }
+
+    private static func header(_ name: String, in headers: [String: String]) -> String? {
+        headers.first { $0.key.caseInsensitiveCompare(name) == .orderedSame }?.value
     }
 }
 

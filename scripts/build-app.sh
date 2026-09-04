@@ -33,6 +33,7 @@ fi
 /bin/mkdir -p "$contents_path/MacOS" "$contents_path/Resources"
 /usr/bin/install -m 755 "$binary_path" "$contents_path/MacOS/Leanwave"
 /usr/bin/install -m 644 "$project_dir/Resources/Info.plist" "$contents_path/Info.plist"
+/usr/bin/install -m 644 "$project_dir/Resources/Leanwave.icns" "$contents_path/Resources/Leanwave.icns"
 /usr/bin/codesign --force --deep --sign - "$staged_bundle"
 /usr/bin/codesign --verify --deep --strict "$staged_bundle"
 /usr/bin/plutil -lint "$contents_path/Info.plist"

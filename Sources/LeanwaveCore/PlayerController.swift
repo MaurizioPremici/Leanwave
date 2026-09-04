@@ -75,13 +75,14 @@ public final class PlayerController: @unchecked Sendable {
                 let newProxy = HTTPRangeProxy(remoteURL: media.url, headers: media.httpHeaders)
                 let localURL = try newProxy.start()
                 proxy = newProxy
-
                 let newProcess = Process()
                 newProcess.executableURL = URL(fileURLWithPath: mpvPath)
                 newProcess.arguments = MPVLaunchConfiguration.arguments(
                     url: localURL.absoluteString,
                     socketPath: path,
-                    ytdlpPath: ytdlpPath
+                    ytdlpPath: ytdlpPath,
+                    httpHeaders: media.httpHeaders,
+                    mediaTitle: media.title
                 ) + ["--really-quiet"]
                 newProcess.standardOutput = FileHandle.nullDevice
                 let errorPipe = Pipe()
@@ -125,8 +126,11 @@ public final class PlayerController: @unchecked Sendable {
     }
 
     public func toggleMute() {
-        let muted = state.isMuted
-        queue.async { self.send(.setMute(!muted)) }
+        queue.async {
+            let muted = !self.state.isMuted
+            self.send(.setMute(muted))
+            self.emit(.muteChanged(muted))
+        }
     }
 
     public func markCloseChoiceHandled() {

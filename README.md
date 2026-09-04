@@ -28,7 +28,7 @@ Leanwave explicitly runs `yt-dlp` without browser cookies. It therefore never as
 
 Leanwave tries to fetch the active YouTube tab from Google Chrome when it opens. You can also type or paste a YouTube URL, or use **Fetch Again** after navigating Chrome to a different page. Playback never starts automatically.
 
-The player provides play/pause, back and forward 15 seconds, timeline seeking, volume, mute, and stop. Once audio playback is confirmed, Leanwave asks whether to:
+The player provides play/pause, back and forward 15 seconds, timeline seeking, volume, mute, and stop. A spinner shows stream setup; a waveform and subtle pulsing ring show active playback. Once audio playback is confirmed, Leanwave shows an inline choice:
 
 - **Close YouTube Tab** — close only the exact matching YouTube tab;
 - **Quit Chrome** — quit Google Chrome completely;
@@ -36,15 +36,15 @@ The player provides play/pause, back and forward 15 seconds, timeline seeking, v
 
 Leanwave never closes a tab or Chrome without this explicit choice. If a tab cannot be matched safely, it remains open.
 
-## Themes
+## Appearance
 
-Choose Carbon, Arctic, Sunset, Forest, Violet, or Paper. Leanwave remembers the selected theme locally in macOS user defaults.
+Leanwave uses one lightweight Carbon skin matched to its app icon. The compact accent menu offers Aqua, Electric Blue, Violet, Coral, Acid Green, or Amber. Leanwave remembers the selected accent locally.
 
 The compact player stays above ordinary application windows. Use the visible `−` and `×` controls to minimize or close it.
 
 ## Memory design
 
-The interface is native AppKit and uses no remote images or decorative animation. Audio buffering is bounded in the `mpv` launch configuration. The app process and the separate `mpv` process should be measured independently when comparing memory use.
+The interface is native AppKit and uses no embedded browser. Its only continuous decoration is a lightweight Core Animation pulse during playback. Audio buffering is bounded in the `mpv` launch configuration. The app process and the separate `mpv` process should be measured independently when comparing memory use.
 
 ## Development
 

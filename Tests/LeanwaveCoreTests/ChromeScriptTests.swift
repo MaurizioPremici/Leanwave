@@ -31,6 +31,8 @@ final class ChromeScriptTests: XCTestCase {
 
         XCTAssertTrue(script.contains("id of chromeWindow is 42"))
         XCTAssertTrue(script.contains("tab 3 of chromeWindow"))
+        XCTAssertTrue(script.contains("if (count of tabs of chromeWindow) is 1"))
+        XCTAssertTrue(script.contains("make new tab"))
         XCTAssertFalse(script.contains("youtu.be"))
     }
 
@@ -40,5 +42,7 @@ final class ChromeScriptTests: XCTestCase {
         XCTAssertTrue(ChromeScriptBuilder.quitChrome.contains("quit"))
         XCTAssertTrue(ChromeScriptBuilder.fetchActiveTab.contains("ASCII character 9"))
         XCTAssertTrue(ChromeScriptBuilder.listTabs.contains("ASCII character 10"))
+        XCTAssertTrue(ChromeScriptBuilder.openYouTube.contains("https://www.youtube.com/"))
+        XCTAssertTrue(ChromeScriptBuilder.openYouTube.contains("Google Chrome"))
     }
 }

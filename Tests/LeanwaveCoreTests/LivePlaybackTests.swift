@@ -3,27 +3,36 @@ import XCTest
 @testable import LeanwaveCore
 
 final class LivePlaybackTests: XCTestCase {
-    func testStreamsYouTubeAudioWithoutBrowserCookies() throws {
+    func testStreamsForThirtySecondsAndTogglesMuteWithoutBrowserCookies() throws {
         guard ProcessInfo.processInfo.environment["LEANWAVE_LIVE_TEST"] == "1" else {
             throw XCTSkip("Set LEANWAVE_LIVE_TEST=1 to run the live YouTube check.")
         }
         let youtube = try XCTUnwrap(YouTubeURL("https://www.youtube.com/watch?v=araHHgik8FQ"))
-        let media = try YTDLPMediaResolver.resolve(url: youtube, executablePath: "/opt/homebrew/bin/yt-dlp")
-        if let availableAt = media.availableAt {
-            Thread.sleep(forTimeInterval: max(0, availableAt.timeIntervalSinceNow + 3))
-        }
-        let proxy = HTTPRangeProxy(remoteURL: media.url, headers: media.httpHeaders)
-        let localURL = try proxy.start()
-        defer { proxy.stop() }
+        let player = PlayerController()
+        defer { player.stop() }
 
-        let mpv = Process()
-        mpv.executableURL = URL(fileURLWithPath: "/opt/homebrew/bin/mpv")
-        mpv.arguments = ["--no-config", "--no-video", "--ytdl=no", "--start=30", "--length=1", localURL.absoluteString]
-        let errors = Pipe()
-        mpv.standardError = errors
-        try mpv.run()
-        mpv.waitUntilExit()
-        let detail = String(data: errors.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-        XCTAssertEqual(mpv.terminationStatus, 0, detail)
+        try player.play(url: youtube)
+        XCTAssertTrue(waitUntil(player: player, timeout: 20) { $0.phase == .playing }, "Playback did not start: \(player.state)")
+        player.setVolume(0)
+
+        player.toggleMute()
+        XCTAssertTrue(waitUntil(player: player, timeout: 3) { $0.isMuted }, "Mute did not activate")
+        player.toggleMute()
+        XCTAssertTrue(waitUntil(player: player, timeout: 3) { !$0.isMuted }, "Mute did not deactivate")
+
+        let startingPosition = player.state.position
+        XCTAssertTrue(
+            waitUntil(player: player, timeout: 40) { $0.position >= startingPosition + 30 },
+            "Playback stopped advancing: \(player.state)"
+        )
+    }
+
+    private func waitUntil(player: PlayerController, timeout: TimeInterval, condition: (PlayerState) -> Bool) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if condition(player.state) { return true }
+            RunLoop.current.run(until: Date().addingTimeInterval(0.05))
+        }
+        return condition(player.state)
     }
 }

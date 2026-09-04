@@ -7,7 +7,8 @@ final class MPVProtocolTests: XCTestCase {
         let arguments = MPVLaunchConfiguration.arguments(
             url: "https://youtu.be/abc",
             socketPath: "/tmp/leanwave-test.sock",
-            ytdlpPath: "/opt/homebrew/bin/yt-dlp"
+            ytdlpPath: "/opt/homebrew/bin/yt-dlp",
+            httpHeaders: ["User-Agent": "Leanwave Test", "Referer": "https://www.youtube.com/"]
         )
 
         XCTAssertTrue(arguments.contains("--no-video"))
@@ -20,6 +21,8 @@ final class MPVProtocolTests: XCTestCase {
         XCTAssertTrue(arguments.contains("--demuxer-max-back-bytes=4MiB"))
         XCTAssertFalse(arguments.contains { $0.contains("cookies-from-browser") })
         XCTAssertFalse(arguments.contains { $0.contains("web_embedded") })
+        XCTAssertTrue(arguments.contains("--user-agent=Leanwave Test"))
+        XCTAssertTrue(arguments.contains("--referrer=https://www.youtube.com/"))
         XCTAssertEqual(arguments.last, "https://youtu.be/abc")
     }
 

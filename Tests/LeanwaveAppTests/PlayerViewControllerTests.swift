@@ -31,13 +31,14 @@ final class PlayerViewControllerTests: XCTestCase {
         controller.loadView()
 
         XCTAssertEqual(controller.urlField.placeholderString, "Paste a YouTube URL")
+        XCTAssertEqual(controller.linkButton.title, "Link")
+        XCTAssertEqual(controller.youtubeButton.accessibilityLabel(), "Open YouTube in Chrome")
         XCTAssertEqual(controller.pasteButton.title, "Paste")
         XCTAssertEqual(controller.fetchButton.title, "Fetch Again")
         XCTAssertEqual(controller.playButton.title, "Play")
-        XCTAssertEqual(
-            controller.themePopup.itemTitles,
-            ["Carbon", "Arctic", "Sunset", "Forest", "Violet", "Paper"]
-        )
+        XCTAssertTrue(controller.sourceCardIsHidden)
+        XCTAssertEqual(controller.themePopup.itemTitles,
+                       ["Aqua", "Electric Blue", "Violet", "Coral", "Acid Green", "Amber"])
     }
 
     func testTransportControlsHaveAccessibleEnglishLabels() {
@@ -55,9 +56,7 @@ final class PlayerViewControllerTests: XCTestCase {
         let controller = PlayerViewController()
         controller.loadView()
 
-        controller.applyTheme(.paper)
-        XCTAssertEqual(controller.view.appearance?.name, .aqua)
-        controller.applyTheme(.carbon)
+        controller.applyTheme(.amber)
         XCTAssertEqual(controller.view.appearance?.name, .darkAqua)
     }
 }

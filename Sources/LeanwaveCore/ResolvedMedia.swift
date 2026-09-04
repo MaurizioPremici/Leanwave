@@ -2,11 +2,13 @@ import Foundation
 
 struct ResolvedMedia: Decodable {
     let url: URL
+    let title: String?
     let httpHeaders: [String: String]
     let availableAt: Date?
 
     enum CodingKeys: String, CodingKey {
         case url
+        case title
         case httpHeaders = "http_headers"
         case availableAt = "available_at"
     }
@@ -18,6 +20,7 @@ struct ResolvedMedia: Decodable {
             throw DecodingError.dataCorruptedError(forKey: .url, in: values, debugDescription: "Invalid media URL")
         }
         url = parsedURL
+        title = try values.decodeIfPresent(String.self, forKey: .title)
         httpHeaders = try values.decodeIfPresent([String: String].self, forKey: .httpHeaders) ?? [:]
         availableAt = try values.decodeIfPresent(Double.self, forKey: .availableAt).map(Date.init(timeIntervalSince1970:))
     }
@@ -28,7 +31,9 @@ enum YTDLPMediaResolver {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: executablePath)
         process.arguments = [
-            "--no-cookies", "--no-playlist", "--format", "bestaudio/best",
+            "--no-cookies", "--no-playlist",
+            "--extractor-args", "youtube:player_client=web_embedded",
+            "--format", "bestaudio/best",
             "--dump-single-json", "--", url.normalizedString,
         ]
         let output = Pipe()

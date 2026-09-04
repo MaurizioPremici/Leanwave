@@ -5,7 +5,7 @@ final class ThemeTests: XCTestCase {
     func testProvidesExactlySixStableThemes() {
         XCTAssertEqual(
             LeanwaveTheme.allCases.map(\.rawValue),
-            ["carbon", "arctic", "sunset", "forest", "violet", "paper"]
+            ["aqua", "electricBlue", "violet", "coral", "acidGreen", "amber"]
         )
     }
 

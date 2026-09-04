@@ -19,6 +19,21 @@ public enum ChromeScriptError: Error, Equatable {
 }
 
 public enum ChromeScriptBuilder {
+    public static let openYouTube = """
+    tell application "Google Chrome"
+        activate
+        if (count of windows) is 0 then
+            make new window
+            set URL of active tab of front window to "https://www.youtube.com/"
+        else
+            tell front window
+                make new tab at end of tabs with properties {URL:"https://www.youtube.com/"}
+                set active tab index to count of tabs
+            end tell
+        end if
+    end tell
+    """
+
     public static let fetchActiveTab = """
     set fieldSeparator to ASCII character 9
     if application "Google Chrome" is not running then return "__LEANWAVE_NOT_RUNNING__"
@@ -62,6 +77,9 @@ public enum ChromeScriptBuilder {
             repeat with chromeWindow in windows
                 if id of chromeWindow is \(reference.windowID) then
                     if (count of tabs of chromeWindow) is greater than or equal to \(reference.tabIndex) then
+                        if (count of tabs of chromeWindow) is 1 then
+                            make new tab at end of tabs of chromeWindow with properties {URL:"chrome://newtab"}
+                        end if
                         close tab \(reference.tabIndex) of chromeWindow
                     end if
                     return
