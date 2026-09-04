@@ -15,6 +15,7 @@ public enum MPVLaunchConfiguration {
             "--script-opts=ytdl_hook-ytdl_path=\(ytdlpPath)",
             "--ytdl-raw-options=no-playlist=,extractor-args=youtube:player_client=web_embedded",
             "--cache=yes",
+            "--pause=yes",
             "--demuxer-max-bytes=16MiB",
             "--demuxer-max-back-bytes=4MiB",
             "--idle=no",

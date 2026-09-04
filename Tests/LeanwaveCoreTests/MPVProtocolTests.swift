@@ -15,6 +15,7 @@ final class MPVProtocolTests: XCTestCase {
         XCTAssertTrue(arguments.contains("--input-ipc-server=/tmp/leanwave-test.sock"))
         XCTAssertTrue(arguments.contains("--ytdl-format=bestaudio/best"))
         XCTAssertTrue(arguments.contains("--cache=yes"))
+        XCTAssertTrue(arguments.contains("--pause=yes"))
         XCTAssertTrue(arguments.contains("--demuxer-max-bytes=16MiB"))
         XCTAssertTrue(arguments.contains("--demuxer-max-back-bytes=4MiB"))
         XCTAssertTrue(arguments.contains { $0.contains("no-playlist") })
