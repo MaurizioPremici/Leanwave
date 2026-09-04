@@ -38,6 +38,16 @@ final class ChromeControllerTests: XCTestCase {
         XCTAssertEqual(changed.sources.count, 1)
     }
 
+    func testClosesRecordedURLAtItsCurrentIndexWhenChromeReordersTabs() throws {
+        let reference = try ChromeScriptBuilder.parseTab("42\t3\thttps://youtu.be/abc")
+        let executor = RecordingScriptExecutor(responses: ["42\t2\thttps://youtu.be/abc", ""])
+
+        try ChromeController(executor: executor).closeTab(reference)
+
+        XCTAssertEqual(executor.sources.count, 2)
+        XCTAssertTrue(executor.sources[1].contains("tab 2 of chromeWindow"))
+    }
+
     func testFindsAnExactManualURLMatch() throws {
         let executor = RecordingScriptExecutor(responses: [
             "42\t1\thttps://youtu.be/other\n84\t2\thttps://youtu.be/abc"

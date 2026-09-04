@@ -75,13 +75,12 @@ public final class ChromeController {
 
     public func closeTab(_ reference: ChromeTabReference) throws {
         let response = try executor.execute(ChromeScriptBuilder.listTabs)
-        let stillMatches = ChromeScriptBuilder.parseTabs(response).contains {
+        let currentReference = ChromeScriptBuilder.parseTabs(response).first {
             $0.windowID == reference.windowID
-                && $0.tabIndex == reference.tabIndex
                 && $0.url.normalizedString == reference.url.normalizedString
         }
-        guard stillMatches else { throw ChromeControllerError.tabChanged }
-        _ = try executor.execute(ChromeScriptBuilder.closeTab(reference))
+        guard let currentReference else { throw ChromeControllerError.tabChanged }
+        _ = try executor.execute(ChromeScriptBuilder.closeTab(currentReference))
     }
 
     public func quitChrome() throws {
