@@ -250,11 +250,13 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         let stored = UserDefaults.standard.string(forKey: "leanwave.theme") ?? LeanwaveTheme.carbon.rawValue
         let theme = LeanwaveTheme(rawValue: stored) ?? .carbon
         themePopup.selectItem(at: LeanwaveTheme.allCases.firstIndex(of: theme) ?? 0)
-        apply(theme)
+        applyTheme(theme)
     }
 
-    private func apply(_ theme: LeanwaveTheme) {
+    func applyTheme(_ theme: LeanwaveTheme) {
         let palette = theme.palette
+        let lightTheme = theme == .arctic || theme == .paper
+        view.appearance = NSAppearance(named: lightTheme ? .aqua : .darkAqua)
         view.layer?.backgroundColor = NSColor(palette.background).cgColor
         sourceCard.layer?.backgroundColor = NSColor(palette.surface).cgColor
         playerCard.layer?.backgroundColor = NSColor(palette.surface).cgColor
@@ -389,7 +391,7 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         let index = max(0, themePopup.indexOfSelectedItem)
         let theme = LeanwaveTheme.allCases[index]
         UserDefaults.standard.set(theme.rawValue, forKey: "leanwave.theme")
-        apply(theme)
+        applyTheme(theme)
     }
 
     func controlTextDidChange(_ obj: Notification) {

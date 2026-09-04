@@ -49,4 +49,16 @@ final class RuntimeSupportTests: XCTestCase {
             try MPVEventParser.parse(#"{"event":"property-change","name":"path","data":"x"}"#)
         )
     }
+
+    func testDescribesNonZeroPlayerExitWithoutHidingTheCause() {
+        XCTAssertNil(PlaybackExit.failureMessage(status: 0, stderr: ""))
+        XCTAssertEqual(
+            PlaybackExit.failureMessage(status: 2, stderr: "first line\nHTTP error 403 Forbidden\n"),
+            "Audio playback failed (mpv 2): HTTP error 403 Forbidden"
+        )
+        XCTAssertEqual(
+            PlaybackExit.failureMessage(status: 1, stderr: ""),
+            "Audio playback failed (mpv 1)."
+        )
+    }
 }

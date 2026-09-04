@@ -19,6 +19,8 @@ final class MPVProtocolTests: XCTestCase {
         XCTAssertTrue(arguments.contains("--demuxer-max-bytes=16MiB"))
         XCTAssertTrue(arguments.contains("--demuxer-max-back-bytes=4MiB"))
         XCTAssertTrue(arguments.contains { $0.contains("no-playlist") })
+        XCTAssertTrue(arguments.contains { $0.contains("cookies-from-browser=chrome") })
+        XCTAssertFalse(arguments.contains { $0.contains("web_embedded") })
         XCTAssertEqual(arguments.last, "https://youtu.be/abc")
     }
 

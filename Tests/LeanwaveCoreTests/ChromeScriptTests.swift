@@ -38,5 +38,7 @@ final class ChromeScriptTests: XCTestCase {
         XCTAssertTrue(ChromeScriptBuilder.fetchActiveTab.contains("Google Chrome"))
         XCTAssertTrue(ChromeScriptBuilder.listTabs.contains("Google Chrome"))
         XCTAssertTrue(ChromeScriptBuilder.quitChrome.contains("quit"))
+        XCTAssertTrue(ChromeScriptBuilder.fetchActiveTab.contains("ASCII character 9"))
+        XCTAssertTrue(ChromeScriptBuilder.listTabs.contains("ASCII character 10"))
     }
 }

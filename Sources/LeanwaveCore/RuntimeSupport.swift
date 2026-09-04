@@ -48,3 +48,17 @@ public enum MPVEventParser {
         }
     }
 }
+
+public enum PlaybackExit {
+    public static func failureMessage(status: Int32, stderr: String) -> String? {
+        guard status != 0 else { return nil }
+        let detail = stderr
+            .split(whereSeparator: \.isNewline)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .last { !$0.isEmpty }
+        if let detail {
+            return "Audio playback failed (mpv \(status)): \(detail)"
+        }
+        return "Audio playback failed (mpv \(status))."
+    }
+}

@@ -1,5 +1,5 @@
 import Foundation
-import Network
+import os
 
 public enum PlayerControllerError: Error, LocalizedError {
     case missingDependency(String)
@@ -19,10 +19,11 @@ public final class PlayerController: @unchecked Sendable {
     public typealias StateHandler = @Sendable (PlayerState) -> Void
 
     private let queue = DispatchQueue(label: "com.mauriziopremici.leanwave.player")
+    private let logger = Logger(subsystem: "com.mauriziopremici.leanwave", category: "player")
     private let stateLock = NSLock()
     private var currentState = PlayerState()
     private var process: Process?
-    private var connection: NWConnection?
+    private var connection: UnixSocketConnection?
     private var socketPath: String?
     private var receiveBuffer = Data()
     private var requestID = 0
@@ -70,10 +71,19 @@ public final class PlayerController: @unchecked Sendable {
                 ytdlpPath: ytdlpPath
             ) + ["--really-quiet"]
             newProcess.standardOutput = FileHandle.nullDevice
-            newProcess.standardError = FileHandle.nullDevice
-            newProcess.terminationHandler = { [weak self] _ in
+            let errorPipe = Pipe()
+            newProcess.standardError = errorPipe
+            newProcess.terminationHandler = { [weak self] finishedProcess in
+                let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
+                let errorText = String(data: errorData, encoding: .utf8) ?? ""
                 guard let controller = self else { return }
-                controller.queue.async { controller.processDidExit(session: session) }
+                controller.queue.async {
+                    controller.processDidExit(
+                        session: session,
+                        status: finishedProcess.terminationStatus,
+                        stderr: errorText
+                    )
+                }
             }
             do {
                 try newProcess.run()
@@ -114,7 +124,7 @@ public final class PlayerController: @unchecked Sendable {
     }
 
     public func stop() {
-        queue.async { self.stopLocked(emitEnded: true) }
+        queue.sync { stopLocked(emitEnded: true) }
     }
 
     private func connectWhenReady(path: String, session: UUID, remainingAttempts: Int) {
@@ -135,26 +145,28 @@ public final class PlayerController: @unchecked Sendable {
             return
         }
 
-        let newConnection = NWConnection(to: .unix(path: path), using: .tcp)
-        connection = newConnection
-        newConnection.stateUpdateHandler = { [weak self] state in
-            guard let self else { return }
-            self.queue.async {
-                guard session == self.sessionID else { return }
-                switch state {
-                case .ready:
-                    self.observeProperties()
-                    self.send(.setVolume(self.state.volume))
-                    self.send(.setPause(false))
-                    self.receiveNext(session: session)
-                case .failed(let error):
+        do {
+            let newConnection = try UnixSocketConnection(
+                path: path,
+                queue: queue,
+                onData: { [weak self] data in
+                    guard let self, session == self.sessionID else { return }
+                    self.consume(data)
+                },
+                onFailure: { [weak self] error in
+                    guard let self, session == self.sessionID else { return }
+                    self.logger.error("mpv IPC failed: \(error.localizedDescription, privacy: .public)")
                     self.emit(.failed("Player connection failed: \(error.localizedDescription)"))
-                default:
-                    break
                 }
-            }
+            )
+            connection = newConnection
+            observeProperties()
+            send(.setVolume(state.volume))
+            send(.setPause(false))
+        } catch {
+            emit(.failed("Player connection failed: \(error.localizedDescription)"))
+            stopLocked(emitEnded: false)
         }
-        newConnection.start(queue: queue)
     }
 
     private func observeProperties() {
@@ -164,29 +176,15 @@ public final class PlayerController: @unchecked Sendable {
         }
     }
 
-    private func receiveNext(session: UUID) {
-        connection?.receive(minimumIncompleteLength: 1, maximumLength: 65_536) {
-            [weak self] data, _, isComplete, error in
-            guard let self else { return }
-            self.queue.async {
-                guard session == self.sessionID else { return }
-                if let data { self.consume(data) }
-                if let error {
-                    self.emit(.failed("Player connection failed: \(error.localizedDescription)"))
-                    return
-                }
-                if !isComplete { self.receiveNext(session: session) }
-            }
-        }
-    }
-
     private func consume(_ data: Data) {
         receiveBuffer.append(data)
         while let newline = receiveBuffer.firstIndex(of: 0x0A) {
             let lineData = receiveBuffer[..<newline]
             receiveBuffer.removeSubrange(...newline)
             guard let line = String(data: lineData, encoding: .utf8), !line.isEmpty else { continue }
-            if let event = try? MPVEventParser.parse(line) { emit(event) }
+            if let event = try? MPVEventParser.parse(line) {
+                emit(event)
+            }
         }
     }
 
@@ -194,7 +192,7 @@ public final class PlayerController: @unchecked Sendable {
         guard let connection else { return }
         requestID += 1
         guard let data = try? command.encoded(requestID: requestID) else { return }
-        connection.send(content: data, completion: .contentProcessed { _ in })
+        connection.send(data)
     }
 
     private func emit(_ event: PlayerEvent) {
@@ -219,7 +217,7 @@ public final class PlayerController: @unchecked Sendable {
         if emitEnded { emit(.ended) }
     }
 
-    private func processDidExit(session: UUID) {
+    private func processDidExit(session: UUID, status: Int32, stderr: String) {
         guard session == sessionID else { return }
         connection?.cancel()
         connection = nil
@@ -227,7 +225,11 @@ public final class PlayerController: @unchecked Sendable {
         if let socketPath { cleanupSocket(socketPath) }
         socketPath = nil
         if case .failed = state.phase { return }
-        emit(.ended)
+        if let message = PlaybackExit.failureMessage(status: status, stderr: stderr) {
+            emit(.failed(message))
+        } else {
+            emit(.ended)
+        }
     }
 
     private func cleanupSocket(_ path: String) {

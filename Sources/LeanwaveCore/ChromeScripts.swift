@@ -20,17 +20,20 @@ public enum ChromeScriptError: Error, Equatable {
 
 public enum ChromeScriptBuilder {
     public static let fetchActiveTab = """
+    set fieldSeparator to ASCII character 9
     if application "Google Chrome" is not running then return "__LEANWAVE_NOT_RUNNING__"
     tell application "Google Chrome"
         if (count of windows) is 0 then return "__LEANWAVE_NO_WINDOW__"
         set chromeWindow to front window
         set tabNumber to active tab index of chromeWindow
         set tabURL to URL of active tab of chromeWindow
-        return ((id of chromeWindow) as text) & tab & (tabNumber as text) & tab & tabURL
+        return ((id of chromeWindow) as text) & fieldSeparator & (tabNumber as text) & fieldSeparator & tabURL
     end tell
     """
 
     public static let listTabs = """
+    set fieldSeparator to ASCII character 9
+    set rowSeparator to ASCII character 10
     if application "Google Chrome" is not running then return ""
     tell application "Google Chrome"
         set output to ""
@@ -39,7 +42,7 @@ public enum ChromeScriptBuilder {
             set tabCount to count of tabs of chromeWindow
             repeat with tabNumber from 1 to tabCount
                 set tabURL to URL of tab tabNumber of chromeWindow
-                set output to output & (windowID as text) & tab & (tabNumber as text) & tab & tabURL & linefeed
+                set output to output & (windowID as text) & fieldSeparator & (tabNumber as text) & fieldSeparator & tabURL & rowSeparator
             end repeat
         end repeat
         return output

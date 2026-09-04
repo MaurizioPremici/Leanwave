@@ -1,4 +1,5 @@
 import AppKit
+import LeanwaveCore
 import XCTest
 @testable import LeanwaveApp
 
@@ -27,5 +28,15 @@ final class PlayerViewControllerTests: XCTestCase {
         XCTAssertEqual(controller.forwardButton.accessibilityLabel(), "Forward 15 seconds")
         XCTAssertEqual(controller.stopButton.accessibilityLabel(), "Stop")
         XCTAssertEqual(controller.muteButton.accessibilityLabel(), "Mute or unmute")
+    }
+
+    func testLightAndDarkThemesSetMatchingControlAppearance() {
+        let controller = PlayerViewController()
+        controller.loadView()
+
+        controller.applyTheme(.paper)
+        XCTAssertEqual(controller.view.appearance?.name, .aqua)
+        controller.applyTheme(.carbon)
+        XCTAssertEqual(controller.view.appearance?.name, .darkAqua)
     }
 }

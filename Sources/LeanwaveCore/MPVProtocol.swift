@@ -13,7 +13,7 @@ public enum MPVLaunchConfiguration {
             "--ytdl=yes",
             "--ytdl-format=bestaudio/best",
             "--script-opts=ytdl_hook-ytdl_path=\(ytdlpPath)",
-            "--ytdl-raw-options=no-playlist=,extractor-args=youtube:player_client=web_embedded",
+            "--ytdl-raw-options=cookies-from-browser=chrome,no-playlist=",
             "--cache=yes",
             "--pause=yes",
             "--demuxer-max-bytes=16MiB",
