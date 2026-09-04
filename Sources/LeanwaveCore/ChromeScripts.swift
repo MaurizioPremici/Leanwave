@@ -75,7 +75,7 @@ public enum ChromeScriptBuilder {
         if application "Google Chrome" is not running then return
         tell application "Google Chrome"
             repeat with chromeWindow in windows
-                if id of chromeWindow is \(reference.windowID) then
+                if (id of chromeWindow as integer) = \(reference.windowID) then
                     if (count of tabs of chromeWindow) is greater than or equal to \(reference.tabIndex) then
                         if (count of tabs of chromeWindow) is 1 then
                             make new tab at end of tabs of chromeWindow with properties {URL:"chrome://newtab"}

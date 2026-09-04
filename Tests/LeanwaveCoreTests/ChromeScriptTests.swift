@@ -29,7 +29,7 @@ final class ChromeScriptTests: XCTestCase {
         let reference = try ChromeScriptBuilder.parseTab("42\t3\thttps://youtu.be/abc")
         let script = ChromeScriptBuilder.closeTab(reference)
 
-        XCTAssertTrue(script.contains("id of chromeWindow is 42"))
+        XCTAssertTrue(script.contains("if (id of chromeWindow as integer) = 42"))
         XCTAssertTrue(script.contains("tab 3 of chromeWindow"))
         XCTAssertTrue(script.contains("if (count of tabs of chromeWindow) is 1"))
         XCTAssertTrue(script.contains("make new tab"))
