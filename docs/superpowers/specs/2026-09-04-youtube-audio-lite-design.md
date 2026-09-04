@@ -2,9 +2,11 @@
 
 ## Obiettivo
 
-Creare una piccola applicazione macOS nativa che riproduca solamente l'audio di un singolo video YouTube e liberi la memoria occupata da Google Chrome appena la riproduzione è realmente iniziata.
+Creare una piccola applicazione macOS nativa che riproduca solamente l'audio di un singolo video YouTube. Quando la riproduzione è realmente iniziata, l'utente può scegliere se chiudere la sola scheda YouTube, chiudere completamente Google Chrome oppure lasciare tutto aperto.
 
 L'applicazione deve essere installabile in `/Applications`, avere controlli completi da lettore audio e offrire sei temi grafici moderni. Il repository pubblico conterrà sorgenti, test e procedura di build, ma non dipendenze o binari pesanti.
+
+Tutti i testi visibili nell'applicazione, inclusi pulsanti, stati, conferme ed errori, sono in inglese.
 
 ## Vincoli
 
@@ -13,14 +15,15 @@ L'applicazione deve essere installabile in `/Applications`, avere controlli comp
 - Riutilizzo di `mpv` e `yt-dlp` installati tramite Homebrew.
 - Riproduzione di un solo video per volta; playlist disabilitate.
 - Nessun download permanente del contenuto multimediale.
-- Chrome viene chiuso completamente soltanto dopo una conferma osservabile dell'avvio della riproduzione.
+- Nessuna scheda o applicazione viene chiusa automaticamente.
+- La scelta di chiusura viene richiesta soltanto dopo una conferma osservabile dell'avvio della riproduzione.
 
 ## Interfaccia
 
 La finestra principale contiene:
 
 - campo per l'URL;
-- azioni `Incolla`, `Usa Chrome` e `Riproduci`;
+- azioni `Paste`, `Use Chrome` e `Play`;
 - titolo/stato della riproduzione;
 - pulsanti indietro 15 secondi, play/pausa, avanti 15 secondi e stop;
 - barra temporale con tempo trascorso e durata;
@@ -35,18 +38,18 @@ I temi sono palette statiche e leggere: Carbon, Arctic, Sunset, Forest, Violet e
 2. Per `Usa Chrome`, AppleScript legge l'URL della scheda attiva della finestra principale di Google Chrome. L'app gestisce esplicitamente Chrome non aperto, finestra assente e permesso Automation negato.
 3. L'URL viene accettato soltanto se usa HTTP o HTTPS e l'host è `youtube.com`, un suo sottodominio, oppure `youtu.be`.
 4. L'app avvia `mpv` senza video, delegando l'estrazione a `yt-dlp`, con playlist disabilitate e cache contenuta.
-5. L'app controlla `mpv` tramite socket JSON IPC locale. Solo un evento/proprietà che dimostra l'avvio effettivo della riproduzione autorizza la chiusura di Google Chrome tramite AppleScript.
-6. La stessa sessione IPC alimenta stato, posizione, durata e controlli del lettore.
-7. Stop, chiusura finestra o terminazione dell'app arrestano il processo figlio e rimuovono il socket temporaneo.
-
-La chiusura di Chrome avviene anche quando l'URL è stato inserito manualmente, purché Chrome sia in esecuzione quando l'audio parte.
+5. L'app controlla `mpv` tramite socket JSON IPC locale. Quando un evento/proprietà dimostra l'avvio effettivo della riproduzione, presenta una finestra con tre scelte in inglese: `Close YouTube Tab`, `Quit Chrome` e `Keep Open`.
+6. `Close YouTube Tab` chiude soltanto la scheda esatta acquisita da Chrome. Per un URL inserito manualmente, l'app cerca una scheda con lo stesso URL; se non la trova, mantiene Chrome aperto e lo segnala.
+7. `Quit Chrome` termina l'intera applicazione tramite AppleScript. `Keep Open` non modifica Chrome.
+8. La stessa sessione IPC alimenta stato, posizione, durata e controlli del lettore.
+9. Stop, chiusura finestra o terminazione dell'app arrestano il processo figlio e rimuovono il socket temporaneo.
 
 ## Componenti
 
 - `AppDelegate`: ciclo di vita dell'app e costruzione della finestra.
 - `PlayerController`: processo `mpv`, IPC, stato e comandi del lettore.
 - `YouTubeURL`: parsing e validazione deterministica degli URL.
-- `ChromeController`: lettura della scheda attiva e chiusura dell'applicazione Chrome.
+- `ChromeController`: lettura e identificazione della scheda attiva, chiusura mirata della scheda o chiusura dell'applicazione Chrome.
 - `Theme`: sei palette e persistenza della scelta.
 - `PlayerViewController`: collegamento tra controlli grafici e stato del lettore.
 
@@ -58,7 +61,7 @@ Le interfacce separano la validazione, l'automazione di Chrome e l'esecuzione de
 - URL passato a `Process` come argomento, mai interpolato in una shell.
 - Socket IPC creato in una directory temporanea specifica della sessione.
 - Errori di avvio, IPC, estrazione o permessi mostrati nell'interfaccia.
-- Chrome resta aperto se l'avvio audio non viene confermato.
+- Chrome resta aperto se l'avvio audio non viene confermato, se l'utente sceglie `Keep Open` o se la scheda richiesta non può essere identificata con sicurezza.
 - Un nuovo avvio arresta in modo ordinato l'eventuale sessione precedente.
 
 ## Build e installazione
@@ -73,7 +76,7 @@ Poiché l'app usa Apple Events per controllare Chrome, `Info.plist` dichiara la 
 - `swift test`.
 - build release e controllo della struttura del bundle.
 - avvio dell'app installata.
-- prova manuale reale con un video YouTube: acquisizione URL da Chrome, avvio audio, chiusura di Chrome, pausa/riprendi, seek, volume, mute e stop.
+- prova manuale reale con un video YouTube: acquisizione URL da Chrome, avvio audio, ciascuna delle tre scelte di chiusura, pausa/riprendi, seek, volume, mute e stop.
 - misurazione indicativa della memoria del processo dell'app durante la riproduzione, riportata come osservazione e non come garanzia universale.
 
 ## Distribuzione
