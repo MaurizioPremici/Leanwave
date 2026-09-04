@@ -42,7 +42,7 @@ La GUI usa una gerarchia visiva essenziale ma curata: testata personalizzata, ti
 2. L'utente può modificare o incollare manualmente l'URL in qualsiasi momento. `Fetch Again` ripete l'acquisizione dalla scheda Chrome attualmente attiva, così può recuperare una pagina aperta successivamente.
 3. L'app gestisce esplicitamente Chrome non aperto, finestra assente e permesso Automation negato. Un fallimento del recupero automatico non blocca l'inserimento manuale.
 4. L'URL viene accettato soltanto se usa HTTP o HTTPS e l'host è `youtube.com`, un suo sottodominio, oppure `youtu.be`.
-5. L'app avvia `mpv` senza video, delegando l'estrazione a `yt-dlp`, con playlist disabilitate e cache contenuta.
+5. L'app risolve il flusso con `yt-dlp --no-cookies`, senza accedere al portachiavi o ai cookie di Chrome. Un relay loopback temporaneo serve a `mpv` piccoli intervalli del flusso e conserva seek e cache contenuta senza salvare il media.
 6. L'app controlla `mpv` tramite socket JSON IPC locale. Quando un evento/proprietà dimostra l'avvio effettivo della riproduzione, presenta una finestra con tre scelte in inglese: `Close YouTube Tab`, `Quit Chrome` e `Keep Open`.
 7. `Close YouTube Tab` chiude soltanto la scheda esatta acquisita da Chrome. Per un URL inserito manualmente, l'app cerca una scheda con lo stesso URL; se non la trova, mantiene Chrome aperto e lo segnala.
 8. `Quit Chrome` termina l'intera applicazione tramite AppleScript. `Keep Open` non modifica Chrome.

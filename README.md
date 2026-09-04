@@ -1,6 +1,6 @@
 # Leanwave
 
-Leanwave is a small native macOS player that streams audio from one YouTube page without keeping a browser-based video player open. It uses AppKit, `mpv`, and `yt-dlp`; it does not embed a browser, Electron, or a local server.
+Leanwave is a small native macOS player that streams audio from one YouTube page without keeping a browser-based video player open. It uses AppKit, `mpv`, and `yt-dlp`; it does not embed a browser, Electron, or a persistent web service.
 
 ## Requirements
 
@@ -22,7 +22,7 @@ open /Applications/Leanwave.app
 
 The build script creates an ad-hoc signed bundle. Because Leanwave controls Chrome through Apple Events, macOS may ask you to allow Automation access the first time it fetches or closes a Chrome tab.
 
-`yt-dlp` reads the local Chrome cookie store to obtain a reliable YouTube audio stream. Cookies remain on the Mac and are passed only to YouTube by `yt-dlp`; Leanwave does not store or upload them elsewhere.
+Leanwave explicitly runs `yt-dlp` without browser cookies. It therefore never asks Keychain for Chrome Safe Storage access. A short-lived loopback relay streams small byte ranges to `mpv`, then stops with playback; it is reachable only from the local Mac and stores no media.
 
 ## Use
 

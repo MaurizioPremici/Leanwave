@@ -23,6 +23,7 @@ public final class PlayerController: @unchecked Sendable {
     private let stateLock = NSLock()
     private var currentState = PlayerState()
     private var process: Process?
+    private var proxy: HTTPRangeProxy?
     private var connection: UnixSocketConnection?
     private var socketPath: String?
     private var receiveBuffer = Data()
@@ -35,6 +36,7 @@ public final class PlayerController: @unchecked Sendable {
 
     deinit {
         connection?.cancel()
+        proxy?.stop()
         if let process, process.isRunning { process.terminate() }
         if let socketPath { try? FileManager.default.removeItem(atPath: socketPath) }
     }
@@ -63,36 +65,44 @@ public final class PlayerController: @unchecked Sendable {
             requestID = 0
             emit(.loading)
 
-            let newProcess = Process()
-            newProcess.executableURL = URL(fileURLWithPath: mpvPath)
-            newProcess.arguments = MPVLaunchConfiguration.arguments(
-                url: url.normalizedString,
-                socketPath: path,
-                ytdlpPath: ytdlpPath
-            ) + ["--really-quiet"]
-            newProcess.standardOutput = FileHandle.nullDevice
-            let errorPipe = Pipe()
-            newProcess.standardError = errorPipe
-            newProcess.terminationHandler = { [weak self] finishedProcess in
-                let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-                let errorText = String(data: errorData, encoding: .utf8) ?? ""
-                guard let controller = self else { return }
-                controller.queue.async {
-                    controller.processDidExit(
-                        session: session,
-                        status: finishedProcess.terminationStatus,
-                        stderr: errorText
-                    )
-                }
-            }
+            let media: ResolvedMedia
             do {
+                media = try YTDLPMediaResolver.resolve(url: url, executablePath: ytdlpPath)
+                if let availableAt = media.availableAt {
+                    let delay = availableAt.timeIntervalSinceNow
+                    if delay > -3, delay < 10 { Thread.sleep(forTimeInterval: max(0, delay + 3)) }
+                }
+                let newProxy = HTTPRangeProxy(remoteURL: media.url, headers: media.httpHeaders)
+                let localURL = try newProxy.start()
+                proxy = newProxy
+
+                let newProcess = Process()
+                newProcess.executableURL = URL(fileURLWithPath: mpvPath)
+                newProcess.arguments = MPVLaunchConfiguration.arguments(
+                    url: localURL.absoluteString,
+                    socketPath: path,
+                    ytdlpPath: ytdlpPath
+                ) + ["--really-quiet"]
+                newProcess.standardOutput = FileHandle.nullDevice
+                let errorPipe = Pipe()
+                newProcess.standardError = errorPipe
+                newProcess.terminationHandler = { [weak self] finishedProcess in
+                    let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
+                    let errorText = String(data: errorData, encoding: .utf8) ?? ""
+                    guard let controller = self else { return }
+                    controller.queue.async {
+                        controller.processDidExit(session: session, status: finishedProcess.terminationStatus, stderr: errorText)
+                    }
+                }
                 try newProcess.run()
+                process = newProcess
             } catch {
+                proxy?.stop()
+                proxy = nil
                 cleanupSocket(path)
                 emit(.failed(error.localizedDescription))
                 throw PlayerControllerError.launchFailed(error.localizedDescription)
             }
-            process = newProcess
             connectWhenReady(path: path, session: session, remainingAttempts: 100)
         }
     }
@@ -211,6 +221,8 @@ public final class PlayerController: @unchecked Sendable {
         connection = nil
         if let process, process.isRunning { process.terminate() }
         process = nil
+        proxy?.stop()
+        proxy = nil
         if let socketPath { cleanupSocket(socketPath) }
         socketPath = nil
         receiveBuffer.removeAll(keepingCapacity: false)
@@ -222,6 +234,8 @@ public final class PlayerController: @unchecked Sendable {
         connection?.cancel()
         connection = nil
         process = nil
+        proxy?.stop()
+        proxy = nil
         if let socketPath { cleanupSocket(socketPath) }
         socketPath = nil
         if case .failed = state.phase { return }

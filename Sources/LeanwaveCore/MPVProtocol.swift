@@ -4,16 +4,13 @@ public enum MPVLaunchConfiguration {
     public static func arguments(
         url: String,
         socketPath: String,
-        ytdlpPath: String
+        ytdlpPath _: String
     ) -> [String] {
         [
             "--no-video",
             "--force-window=no",
             "--input-ipc-server=\(socketPath)",
-            "--ytdl=yes",
-            "--ytdl-format=bestaudio/best",
-            "--script-opts=ytdl_hook-ytdl_path=\(ytdlpPath)",
-            "--ytdl-raw-options=cookies-from-browser=chrome,no-playlist=",
+            "--ytdl=no",
             "--cache=yes",
             "--pause=yes",
             "--demuxer-max-bytes=16MiB",
