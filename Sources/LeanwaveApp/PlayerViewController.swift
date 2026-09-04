@@ -22,19 +22,20 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
 
     private let player: PlayerController
     private let chrome: ChromeController
-    private let titleLabel = NSTextField(labelWithString: "Ready")
-    private let statusLabel = NSTextField(labelWithString: "Open a YouTube page or paste its URL.")
+    private let titleLabel = NSTextField(labelWithString: "Ready to play")
+    private let statusLabel = NSTextField(labelWithString: "Open a YouTube video to load audio.")
     private let elapsedLabel = NSTextField(labelWithString: "0:00")
     private let durationLabel = NSTextField(labelWithString: "0:00")
     private let seekSlider = NSSlider(value: 0, minValue: 0, maxValue: 1, target: nil, action: nil)
     private let volumeSlider = NSSlider(value: 75, minValue: 0, maxValue: 100, target: nil, action: nil)
-    private let sourceCard = NSView()
-    private let playerCard = NSView()
+    private let sourceCard = AuroraCardView()
+    private let playerCard = AuroraCardView()
     private let logoBadge = NSImageView()
     private let sourceCaption = NSTextField(labelWithString: "SOURCE")
     private let pulseRing = NSView()
     private let loadingIndicator = NSProgressIndicator()
     private let audioIndicator = NSImageView()
+    private let audioIndicatorRight = NSImageView()
     private let chromeChoiceBar = NSView()
     private let closeTabChoiceButton = NSButton(title: "Close Tab", target: nil, action: nil)
     private let quitChromeChoiceButton = NSButton(title: "Quit", target: nil, action: nil)
@@ -56,7 +57,7 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
     }
 
     override func loadView() {
-        let root = NSView()
+        let root = AuroraBackgroundView()
         root.wantsLayer = true
         view = root
 
@@ -67,7 +68,7 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
             content.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 14),
             content.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -14),
             content.topAnchor.constraint(equalTo: root.topAnchor, constant: 10),
-            content.bottomAnchor.constraint(lessThanOrEqualTo: root.bottomAnchor, constant: -10),
+            content.bottomAnchor.constraint(equalTo: root.bottomAnchor),
         ])
 
         player.onStateChange = { [weak self] state in
@@ -109,6 +110,10 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         urlField.setContentHuggingPriority(.defaultLow, for: .horizontal)
 
         configureTextButton(linkButton, action: #selector(toggleSourcePanel))
+        linkButton.image = NSImage(systemSymbolName: "link", accessibilityDescription: "Show link controls")
+        linkButton.imagePosition = .imageLeading
+        linkButton.imageHugsTitle = true
+        linkButton.setAccessibilityLabel("Show link controls")
         configureSymbolButton(youtubeButton, symbol: "play.rectangle.fill", fallback: "YT", label: "Open YouTube in Chrome", action: #selector(openYouTube))
         configureTextButton(pasteButton, action: #selector(pasteURL))
         configureTextButton(fetchButton, action: #selector(fetchAgain))
@@ -137,27 +142,35 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         themePopup.target = self
         themePopup.action = #selector(themeChanged)
         themePopup.setAccessibilityLabel("Accent color")
-        themePopup.controlSize = .small
+        themePopup.controlSize = .regular
+        themePopup.widthAnchor.constraint(equalToConstant: 170).isActive = true
+        themePopup.heightAnchor.constraint(equalToConstant: 42).isActive = true
 
         configureChoiceButton(closeTabChoiceButton, action: #selector(closeYouTubeTab))
         configureChoiceButton(quitChromeChoiceButton, action: #selector(quitChrome))
         configureChoiceButton(keepOpenChoiceButton, action: #selector(keepChromeOpen))
 
         loadingIndicator.style = .spinning
-        loadingIndicator.controlSize = .small
+        loadingIndicator.controlSize = .regular
         loadingIndicator.isDisplayedWhenStopped = false
-        loadingIndicator.widthAnchor.constraint(equalToConstant: 14).isActive = true
-        loadingIndicator.heightAnchor.constraint(equalToConstant: 14).isActive = true
+        loadingIndicator.widthAnchor.constraint(equalToConstant: 18).isActive = true
+        loadingIndicator.heightAnchor.constraint(equalToConstant: 18).isActive = true
         audioIndicator.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "Audio is playing")
         audioIndicator.imageScaling = .scaleProportionallyDown
-        audioIndicator.isHidden = true
-        audioIndicator.widthAnchor.constraint(equalToConstant: 17).isActive = true
-        audioIndicator.heightAnchor.constraint(equalToConstant: 14).isActive = true
+        audioIndicator.wantsLayer = true
+        audioIndicator.widthAnchor.constraint(equalToConstant: 26).isActive = true
+        audioIndicator.heightAnchor.constraint(equalToConstant: 20).isActive = true
+        audioIndicatorRight.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: nil)
+        audioIndicatorRight.imageScaling = .scaleProportionallyDown
+        audioIndicatorRight.wantsLayer = true
+        audioIndicatorRight.widthAnchor.constraint(equalToConstant: 26).isActive = true
+        audioIndicatorRight.heightAnchor.constraint(equalToConstant: 20).isActive = true
 
-        titleLabel.font = .systemFont(ofSize: 15, weight: .semibold)
+        titleLabel.font = .systemFont(ofSize: 21, weight: .medium)
         titleLabel.alignment = .center
         titleLabel.lineBreakMode = .byTruncatingTail
-        statusLabel.font = .systemFont(ofSize: 9)
+        statusLabel.font = .systemFont(ofSize: 13)
+        statusLabel.alignment = .center
         statusLabel.lineBreakMode = .byTruncatingTail
         elapsedLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .medium)
         durationLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .medium)
@@ -165,15 +178,15 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         playerCard.wantsLayer = true
         pulseRing.wantsLayer = true
         chromeChoiceBar.wantsLayer = true
-        sourceCard.layer?.cornerRadius = 13
-        playerCard.layer?.cornerRadius = 16
+        sourceCard.layer?.cornerRadius = 22
+        playerCard.layer?.cornerRadius = 22
         chromeChoiceBar.layer?.cornerRadius = 10
         chromeChoiceBar.layer?.borderWidth = 1
         [sourceCard, playerCard].forEach {
             $0.layer?.borderWidth = 1
-            $0.layer?.shadowOpacity = 0.18
-            $0.layer?.shadowRadius = 16
-            $0.layer?.shadowOffset = NSSize(width: 0, height: -5)
+            $0.layer?.shadowOpacity = 0.30
+            $0.layer?.shadowRadius = 22
+            $0.layer?.shadowOffset = .zero
         }
         sourceCard.isHidden = true
         chromeChoiceBar.isHidden = true
@@ -183,45 +196,46 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         logoBadge.image = NSApp.applicationIconImage
         logoBadge.imageScaling = .scaleProportionallyUpOrDown
         logoBadge.wantsLayer = true
-        logoBadge.layer?.cornerRadius = 11
+        logoBadge.layer?.cornerRadius = 14
         logoBadge.layer?.masksToBounds = true
-        logoBadge.widthAnchor.constraint(equalToConstant: 36).isActive = true
-        logoBadge.heightAnchor.constraint(equalToConstant: 36).isActive = true
+        logoBadge.widthAnchor.constraint(equalToConstant: 52).isActive = true
+        logoBadge.heightAnchor.constraint(equalToConstant: 52).isActive = true
 
         let brand = NSTextField(labelWithString: "Leanwave")
         brand.attributedStringValue = NSAttributedString(
             string: "LEANWAVE",
             attributes: [
-                .font: NSFont.systemFont(ofSize: 10, weight: .bold),
-                .kern: 2.0,
+                .font: NSFont.systemFont(ofSize: 15, weight: .semibold),
+                .kern: 4.5,
             ]
         )
         brand.tag = 501
         let tagline = NSTextField(labelWithString: "YouTube audio, without the visual noise.")
-        tagline.font = .systemFont(ofSize: 9, weight: .medium)
+        tagline.font = .systemFont(ofSize: 12, weight: .regular)
         tagline.tag = 502
         let identity = NSStackView(views: [brand, tagline])
         identity.orientation = .vertical
         identity.alignment = .leading
-        identity.spacing = 2
+        identity.spacing = 5
         let headerSpacer = NSView()
         headerSpacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
         let windowControls = NSStackView(views: [minimizeButton, closeButton])
         windowControls.orientation = .horizontal
-        windowControls.spacing = 5
-        let header = NSStackView(views: [logoBadge, identity, linkButton, youtubeButton, themePopup, headerSpacer, windowControls])
+        windowControls.spacing = 10
+        let header = NSStackView(views: [logoBadge, identity, headerSpacer, youtubeButton, themePopup, windowControls])
         header.orientation = .horizontal
         header.alignment = .centerY
-        header.spacing = 8
+        header.spacing = 12
+        header.heightAnchor.constraint(equalToConstant: 58).isActive = true
 
-        sourceCaption.font = .systemFont(ofSize: 10, weight: .semibold)
+        sourceCaption.font = .systemFont(ofSize: 12, weight: .semibold)
         sourceCaption.tag = 503
         let inputRow = NSStackView(views: [urlField, playButton])
         inputRow.orientation = .horizontal
         inputRow.alignment = .centerY
-        inputRow.spacing = 8
-        urlField.heightAnchor.constraint(equalToConstant: 36).isActive = true
-        playButton.widthAnchor.constraint(equalToConstant: 82).isActive = true
+        inputRow.spacing = 12
+        urlField.heightAnchor.constraint(equalToConstant: 48).isActive = true
+        playButton.widthAnchor.constraint(equalToConstant: 112).isActive = true
 
         let utilityRow = NSStackView(views: [pasteButton, fetchButton])
         utilityRow.orientation = .horizontal
@@ -230,30 +244,33 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         let sourceStack = NSStackView(views: [sourceCaption, inputRow, utilityRow])
         sourceStack.orientation = .vertical
         sourceStack.alignment = .leading
-        sourceStack.spacing = 8
+        sourceStack.spacing = 12
         inputRow.widthAnchor.constraint(equalTo: sourceStack.widthAnchor).isActive = true
 
         sourceCard.addSubview(sourceStack)
         sourceStack.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            sourceStack.leadingAnchor.constraint(equalTo: sourceCard.leadingAnchor, constant: 13),
-            sourceStack.trailingAnchor.constraint(equalTo: sourceCard.trailingAnchor, constant: -13),
-            sourceStack.topAnchor.constraint(equalTo: sourceCard.topAnchor, constant: 8),
-            sourceStack.bottomAnchor.constraint(equalTo: sourceCard.bottomAnchor, constant: -8),
+            sourceStack.leadingAnchor.constraint(equalTo: sourceCard.leadingAnchor, constant: 20),
+            sourceStack.trailingAnchor.constraint(equalTo: sourceCard.trailingAnchor, constant: -20),
+            sourceStack.centerYAnchor.constraint(equalTo: sourceCard.centerYAnchor),
         ])
 
-        let statusRow = NSStackView(views: [loadingIndicator, audioIndicator, statusLabel])
+        let titleRow = NSStackView(views: [audioIndicator, titleLabel, audioIndicatorRight])
+        titleRow.orientation = .horizontal
+        titleRow.alignment = .centerY
+        titleRow.spacing = 14
+        let statusRow = NSStackView(views: [loadingIndicator, statusLabel])
         statusRow.orientation = .horizontal
         statusRow.alignment = .centerY
-        statusRow.spacing = 5
-        let titleStack = NSStackView(views: [titleLabel, statusRow])
+        statusRow.spacing = 8
+        let titleStack = NSStackView(views: [titleRow, statusRow])
         titleStack.orientation = .vertical
         titleStack.alignment = .centerX
-        titleStack.spacing = 3
+        titleStack.spacing = 4
         nowPlayingStack = titleStack
 
         let chromePrompt = NSTextField(labelWithString: "Chrome")
-        chromePrompt.font = .systemFont(ofSize: 10, weight: .semibold)
+        chromePrompt.font = .systemFont(ofSize: 11, weight: .semibold)
         chromePrompt.tag = 505
         let chromeActions = NSStackView(views: [closeTabChoiceButton, quitChromeChoiceButton, keepOpenChoiceButton])
         chromeActions.orientation = .horizontal
@@ -268,30 +285,30 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         NSLayoutConstraint.activate([
             chromeRow.centerXAnchor.constraint(equalTo: chromeChoiceBar.centerXAnchor),
             chromeRow.centerYAnchor.constraint(equalTo: chromeChoiceBar.centerYAnchor),
-            chromeChoiceBar.heightAnchor.constraint(equalToConstant: 30),
+            chromeChoiceBar.heightAnchor.constraint(equalToConstant: 38),
         ])
 
         let timeline = NSStackView(views: [elapsedLabel, seekSlider, durationLabel])
         timeline.orientation = .horizontal
         timeline.alignment = .centerY
         timeline.spacing = 10
-        elapsedLabel.widthAnchor.constraint(equalToConstant: 42).isActive = true
-        durationLabel.widthAnchor.constraint(equalToConstant: 50).isActive = true
+        elapsedLabel.widthAnchor.constraint(equalToConstant: 46).isActive = true
+        durationLabel.widthAnchor.constraint(equalToConstant: 46).isActive = true
 
         let playContainer = NSView()
         playContainer.addSubview(pulseRing)
         playContainer.addSubview(playPauseButton)
         pulseRing.translatesAutoresizingMaskIntoConstraints = false
         playPauseButton.translatesAutoresizingMaskIntoConstraints = false
-        pulseRing.layer?.cornerRadius = 19
-        pulseRing.layer?.borderWidth = 1.5
+        pulseRing.layer?.cornerRadius = 35
+        pulseRing.layer?.borderWidth = 2
         NSLayoutConstraint.activate([
-            playContainer.widthAnchor.constraint(equalToConstant: 42),
-            playContainer.heightAnchor.constraint(equalToConstant: 42),
+            playContainer.widthAnchor.constraint(equalToConstant: 76),
+            playContainer.heightAnchor.constraint(equalToConstant: 76),
             pulseRing.centerXAnchor.constraint(equalTo: playContainer.centerXAnchor),
             pulseRing.centerYAnchor.constraint(equalTo: playContainer.centerYAnchor),
-            pulseRing.widthAnchor.constraint(equalToConstant: 38),
-            pulseRing.heightAnchor.constraint(equalToConstant: 38),
+            pulseRing.widthAnchor.constraint(equalToConstant: 70),
+            pulseRing.heightAnchor.constraint(equalToConstant: 70),
             playPauseButton.centerXAnchor.constraint(equalTo: playContainer.centerXAnchor),
             playPauseButton.centerYAnchor.constraint(equalTo: playContainer.centerYAnchor),
         ])
@@ -299,25 +316,25 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         let transport = NSStackView(views: [backButton, playContainer, forwardButton])
         transport.orientation = .horizontal
         transport.alignment = .centerY
-        transport.spacing = 16
+        transport.spacing = 14
 
         let volume = NSStackView(views: [muteButton, volumeSlider])
         volume.orientation = .horizontal
         volume.alignment = .centerY
-        volume.spacing = 6
-        volumeSlider.widthAnchor.constraint(equalToConstant: 82).isActive = true
+        volume.spacing = 10
+        volumeSlider.widthAnchor.constraint(equalToConstant: 132).isActive = true
 
         let controlSpacer = NSView()
         controlSpacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
         let controls = NSStackView(views: [transport, stopButton, controlSpacer, volume])
         controls.orientation = .horizontal
         controls.alignment = .centerY
-        controls.spacing = 10
+        controls.spacing = 12
 
         let playerStack = NSStackView(views: [titleStack, chromeChoiceBar, controls, timeline])
         playerStack.orientation = .vertical
         playerStack.alignment = .centerX
-        playerStack.spacing = 4
+        playerStack.spacing = 6
         playerStack.setHuggingPriority(.defaultLow, for: .horizontal)
         timeline.widthAnchor.constraint(equalTo: playerStack.widthAnchor).isActive = true
         titleStack.widthAnchor.constraint(equalTo: playerStack.widthAnchor).isActive = true
@@ -327,20 +344,32 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         playerCard.addSubview(playerStack)
         playerStack.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            playerStack.leadingAnchor.constraint(equalTo: playerCard.leadingAnchor, constant: 16),
-            playerStack.trailingAnchor.constraint(equalTo: playerCard.trailingAnchor, constant: -16),
-            playerStack.topAnchor.constraint(equalTo: playerCard.topAnchor, constant: 6),
-            playerStack.bottomAnchor.constraint(equalTo: playerCard.bottomAnchor, constant: -6),
+            playerStack.leadingAnchor.constraint(equalTo: playerCard.leadingAnchor, constant: 24),
+            playerStack.trailingAnchor.constraint(equalTo: playerCard.trailingAnchor, constant: -24),
+            playerStack.topAnchor.constraint(equalTo: playerCard.topAnchor, constant: 10),
+            playerStack.bottomAnchor.constraint(equalTo: playerCard.bottomAnchor, constant: -10),
         ])
 
-        let stack = NSStackView(views: [header, sourceCard, playerCard])
+        let footer = NSView()
+        footer.addSubview(linkButton)
+        linkButton.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            footer.heightAnchor.constraint(equalToConstant: 42),
+            linkButton.centerXAnchor.constraint(equalTo: footer.centerXAnchor),
+            linkButton.centerYAnchor.constraint(equalTo: footer.centerYAnchor, constant: 8),
+        ])
+
+        let stack = NSStackView(views: [header, sourceCard, playerCard, footer])
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 8
+        stack.spacing = 6
         header.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
         sourceCard.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
         playerCard.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
+        footer.widthAnchor.constraint(equalTo: stack.widthAnchor).isActive = true
+        sourceCard.heightAnchor.constraint(equalToConstant: 194).isActive = true
+        playerCard.heightAnchor.constraint(equalToConstant: 194).isActive = true
         return stack
     }
 
@@ -348,11 +377,11 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         button.target = self
         button.action = action
         button.isBordered = false
-        button.font = .systemFont(ofSize: 11, weight: .semibold)
+        button.font = .systemFont(ofSize: button === linkButton ? 15 : 12, weight: .semibold)
         button.wantsLayer = true
-        button.layer?.cornerRadius = 9
-        button.heightAnchor.constraint(equalToConstant: button === playButton ? 40 : 28).isActive = true
-        if button === linkButton { button.widthAnchor.constraint(equalToConstant: 48).isActive = true }
+        button.layer?.cornerRadius = button === linkButton ? 14 : 10
+        button.heightAnchor.constraint(equalToConstant: button === playButton ? 48 : (button === linkButton ? 42 : 32)).isActive = true
+        if button === linkButton { button.widthAnchor.constraint(equalToConstant: 118).isActive = true }
         if button !== playButton {
             button.contentTintColor = .labelColor
         }
@@ -362,13 +391,13 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         button.target = self
         button.action = action
         button.isBordered = false
-        button.font = .systemFont(ofSize: 16, weight: .medium)
+        button.font = .systemFont(ofSize: 24, weight: .light)
         button.setAccessibilityLabel(label)
         button.toolTip = label
         button.wantsLayer = true
-        button.layer?.cornerRadius = 8
-        button.widthAnchor.constraint(equalToConstant: 27).isActive = true
-        button.heightAnchor.constraint(equalToConstant: 27).isActive = true
+        button.layer?.cornerRadius = 14
+        button.widthAnchor.constraint(equalToConstant: 46).isActive = true
+        button.heightAnchor.constraint(equalToConstant: 46).isActive = true
     }
 
     private func configureChoiceButton(_ button: NSButton, action: Selector) {
@@ -400,7 +429,14 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         }
         button.setAccessibilityLabel(label)
         button.toolTip = label
-        let size: CGFloat = button === playPauseButton ? 34 : 30
+        let size: CGFloat
+        if button === playPauseButton {
+            size = 66
+        } else if button === youtubeButton {
+            size = 48
+        } else {
+            size = 50
+        }
         button.layer?.cornerRadius = size / 2
         button.widthAnchor.constraint(equalToConstant: size).isActive = true
         button.heightAnchor.constraint(equalToConstant: size).isActive = true
@@ -419,11 +455,9 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         let accent = NSColor(palette.accent)
         let separator = NSColor(palette.separator)
         view.appearance = NSAppearance(named: .darkAqua)
-        view.layer?.backgroundColor = NSColor(palette.background).cgColor
-        sourceCard.layer?.backgroundColor = NSColor(palette.surface).cgColor
-        playerCard.layer?.backgroundColor = NSColor(palette.surface).cgColor
-        sourceCard.layer?.borderColor = NSColor(palette.separator).cgColor
-        playerCard.layer?.borderColor = NSColor(palette.separator).cgColor
+        (view as? AuroraBackgroundView)?.apply(accent: accent)
+        sourceCard.apply(accent: accent)
+        playerCard.apply(accent: accent)
         chromeChoiceBar.layer?.backgroundColor = separator.withAlphaComponent(0.25).cgColor
         chromeChoiceBar.layer?.borderColor = accent.withAlphaComponent(0.38).cgColor
         sourceCard.layer?.shadowColor = NSColor.black.cgColor
@@ -439,20 +473,39 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         elapsedLabel.textColor = NSColor(palette.secondaryText)
         durationLabel.textColor = NSColor(palette.secondaryText)
         audioIndicator.contentTintColor = accent
+        audioIndicatorRight.contentTintColor = accent
         seekSlider.trackFillColor = accent
         volumeSlider.trackFillColor = accent
-        [backButton, forwardButton, stopButton, muteButton].forEach {
+        [backButton, forwardButton, stopButton, muteButton, youtubeButton].forEach {
             $0.contentTintColor = NSColor(palette.primaryText)
-            $0.layer?.backgroundColor = separator.withAlphaComponent(0.45).cgColor
+            $0.layer?.backgroundColor = NSColor(calibratedRed: 0.06, green: 0.11, blue: 0.17, alpha: 0.90).cgColor
+            $0.layer?.borderWidth = 1
+            $0.layer?.borderColor = accent.withAlphaComponent(0.24).cgColor
+            $0.layer?.shadowColor = accent.cgColor
+            $0.layer?.shadowOpacity = 0.16
+            $0.layer?.shadowRadius = 8
+            $0.layer?.shadowOffset = .zero
         }
-        playPauseButton.contentTintColor = NSColor(palette.background)
-        playPauseButton.layer?.backgroundColor = accent.cgColor
+        playPauseButton.contentTintColor = .white
+        playPauseButton.layer?.backgroundColor = accent.withAlphaComponent(0.28).cgColor
+        playPauseButton.layer?.borderWidth = 1.5
+        playPauseButton.layer?.borderColor = accent.withAlphaComponent(0.90).cgColor
+        playPauseButton.layer?.shadowColor = accent.cgColor
+        playPauseButton.layer?.shadowOpacity = 0.55
+        playPauseButton.layer?.shadowRadius = 14
+        playPauseButton.layer?.shadowOffset = .zero
         playButton.contentTintColor = NSColor(palette.background)
         playButton.layer?.backgroundColor = accent.cgColor
-        [linkButton, youtubeButton, pasteButton, fetchButton, closeTabChoiceButton, quitChromeChoiceButton, keepOpenChoiceButton].forEach {
+        [linkButton, pasteButton, fetchButton, closeTabChoiceButton, quitChromeChoiceButton, keepOpenChoiceButton].forEach {
             $0.contentTintColor = NSColor(palette.primaryText)
-            $0.layer?.backgroundColor = separator.withAlphaComponent(0.48).cgColor
+            $0.layer?.backgroundColor = NSColor(calibratedRed: 0.06, green: 0.11, blue: 0.17, alpha: 0.92).cgColor
         }
+        linkButton.layer?.borderWidth = 1.5
+        linkButton.layer?.borderColor = accent.withAlphaComponent(0.75).cgColor
+        linkButton.layer?.shadowColor = accent.cgColor
+        linkButton.layer?.shadowOpacity = 0.45
+        linkButton.layer?.shadowRadius = 12
+        linkButton.layer?.shadowOffset = .zero
         [minimizeButton, closeButton].forEach {
             $0.contentTintColor = NSColor(palette.primaryText)
             $0.layer?.backgroundColor = NSColor(palette.separator).withAlphaComponent(0.48).cgColor
@@ -464,7 +517,7 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
 
     private func render(_ state: PlayerState) {
         lastState = state
-        titleLabel.stringValue = state.title
+        titleLabel.stringValue = state.phase == .idle ? "Ready to play" : state.title
         elapsedLabel.stringValue = TimeText.format(state.position)
         durationLabel.stringValue = TimeText.format(state.duration ?? 0)
         seekSlider.maxValue = max(1, state.duration ?? 1)
@@ -480,23 +533,35 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
 
         switch state.phase {
         case .idle:
-            statusLabel.stringValue = "Ready for a YouTube URL."
+            statusLabel.stringValue = "Open a YouTube video to load audio."
             loadingIndicator.stopAnimation(nil)
-            audioIndicator.isHidden = true
+            audioIndicator.isHidden = false
+            audioIndicatorRight.isHidden = false
+            audioIndicator.alphaValue = 0.72
+            audioIndicatorRight.alphaValue = 0.72
         case .loading:
             statusLabel.stringValue = "Connecting to the audio stream…"
             loadingIndicator.startAnimation(nil)
-            audioIndicator.isHidden = true
+            audioIndicator.isHidden = false
+            audioIndicatorRight.isHidden = false
+            audioIndicator.alphaValue = 0.42
+            audioIndicatorRight.alphaValue = 0.42
         case .playing: statusLabel.stringValue = state.isPaused ? "Paused" : "Playing audio only"
         case .failed(let message):
             statusLabel.stringValue = message
             loadingIndicator.stopAnimation(nil)
-            audioIndicator.isHidden = true
+            audioIndicator.isHidden = false
+            audioIndicatorRight.isHidden = false
+            audioIndicator.alphaValue = 0.42
+            audioIndicatorRight.alphaValue = 0.42
         }
 
         if state.phase == .playing {
             loadingIndicator.stopAnimation(nil)
-            audioIndicator.isHidden = state.isPaused
+            audioIndicator.isHidden = false
+            audioIndicatorRight.isHidden = false
+            audioIndicator.alphaValue = state.isPaused ? 0.45 : 1
+            audioIndicatorRight.alphaValue = state.isPaused ? 0.45 : 1
         }
 
         setPulseActive(state.phase == .playing && !state.isPaused)
@@ -517,6 +582,8 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
 
     private func setPulseActive(_ active: Bool) {
         pulseRing.layer?.removeAnimation(forKey: "leanwave.pulse")
+        audioIndicator.layer?.removeAnimation(forKey: "leanwave.wave")
+        audioIndicatorRight.layer?.removeAnimation(forKey: "leanwave.wave")
         guard active else { return }
         let animation = CABasicAnimation(keyPath: "transform.scale")
         animation.fromValue = 0.92
@@ -526,6 +593,17 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         animation.repeatCount = .infinity
         animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
         pulseRing.layer?.add(animation, forKey: "leanwave.pulse")
+
+        let wave = CABasicAnimation(keyPath: "opacity")
+        wave.fromValue = 0.45
+        wave.toValue = 1.0
+        wave.duration = 0.72
+        wave.autoreverses = true
+        wave.repeatCount = .infinity
+        wave.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        audioIndicator.layer?.add(wave, forKey: "leanwave.wave")
+        wave.beginTime = CACurrentMediaTime() + 0.22
+        audioIndicatorRight.layer?.add(wave, forKey: "leanwave.wave")
     }
 
     private func presentChromeChoice() {
@@ -658,5 +736,71 @@ private extension NSColor {
             blue: color.blue,
             alpha: color.alpha
         )
+    }
+}
+
+private final class AuroraBackgroundView: NSView {
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        wantsLayer = true
+    }
+
+    required init?(coder: NSCoder) {
+        nil
+    }
+
+    override func makeBackingLayer() -> CALayer {
+        CAGradientLayer()
+    }
+
+    func apply(accent: NSColor) {
+        guard let gradient = layer as? CAGradientLayer else { return }
+        let tintedBlack = accent.blended(withFraction: 0.88, of: .black) ?? .black
+        gradient.colors = [
+            NSColor(calibratedRed: 0.012, green: 0.024, blue: 0.043, alpha: 1).cgColor,
+            tintedBlack.withAlphaComponent(1).cgColor,
+            NSColor(calibratedRed: 0.008, green: 0.015, blue: 0.027, alpha: 1).cgColor,
+        ]
+        gradient.locations = [0, 0.46, 1]
+        gradient.startPoint = CGPoint(x: 0, y: 1)
+        gradient.endPoint = CGPoint(x: 1, y: 0)
+        gradient.cornerRadius = 22
+        gradient.borderWidth = 1
+        gradient.borderColor = accent.withAlphaComponent(0.16).cgColor
+    }
+}
+
+private final class AuroraCardView: NSView {
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        wantsLayer = true
+    }
+
+    required init?(coder: NSCoder) {
+        nil
+    }
+
+    override func makeBackingLayer() -> CALayer {
+        CAGradientLayer()
+    }
+
+    func apply(accent: NSColor) {
+        guard let gradient = layer as? CAGradientLayer else { return }
+        let tintedSurface = accent.blended(withFraction: 0.84, of: .black) ?? .black
+        gradient.colors = [
+            NSColor(calibratedRed: 0.075, green: 0.13, blue: 0.20, alpha: 0.97).cgColor,
+            NSColor(calibratedRed: 0.025, green: 0.07, blue: 0.12, alpha: 0.99).cgColor,
+            tintedSurface.withAlphaComponent(1).cgColor,
+        ]
+        gradient.locations = [0, 0.66, 1]
+        gradient.startPoint = CGPoint(x: 0, y: 1)
+        gradient.endPoint = CGPoint(x: 1, y: 0)
+        gradient.cornerRadius = 22
+        gradient.borderWidth = 1
+        gradient.borderColor = accent.withAlphaComponent(0.34).cgColor
+        gradient.shadowColor = accent.cgColor
+        gradient.shadowOpacity = 0.22
+        gradient.shadowRadius = 18
+        gradient.shadowOffset = .zero
     }
 }

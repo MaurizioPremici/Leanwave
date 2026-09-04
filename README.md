@@ -38,9 +38,9 @@ Leanwave never closes a tab or Chrome without this explicit choice. If a tab can
 
 ## Appearance
 
-Leanwave uses one lightweight Carbon skin matched to its app icon. The compact accent menu offers Aqua, Electric Blue, Violet, Coral, Acid Green, or Amber. Leanwave remembers the selected accent locally.
+Leanwave uses one lightweight Aurora skin matched to its app icon. The accent menu offers Aqua, Electric Blue, Violet, Coral, Acid Green, or Amber. Leanwave remembers the selected accent locally.
 
-The compact player stays above ordinary application windows. Use the visible `−` and `×` controls to minimize or close it.
+The wide, low-profile player stays above ordinary application windows. Use the centered `Link` control to show or hide the URL panel, and the visible `−` and `×` controls to minimize or close the app.
 
 ## Memory design
 

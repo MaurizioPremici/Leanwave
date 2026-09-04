@@ -4,7 +4,7 @@ import AppKit
 enum AppWindowFactory {
     static func make(contentViewController: NSViewController) -> NSWindow {
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 540, height: 175),
+            contentRect: NSRect(x: 0, y: 0, width: 540, height: 338),
             styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
@@ -20,7 +20,7 @@ enum AppWindowFactory {
         window.isRestorable = false
         window.sharingType = .readOnly
         window.contentViewController = contentViewController
-        window.setContentSize(NSSize(width: 540, height: 175))
+        window.setContentSize(NSSize(width: 540, height: 338))
         window.minSize = window.frame.size
         window.standardWindowButton(.closeButton)?.isHidden = true
         window.standardWindowButton(.miniaturizeButton)?.isHidden = true

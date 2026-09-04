@@ -24,6 +24,18 @@ final class PlayerViewControllerTests: XCTestCase {
         XCTAssertTrue(window.styleMask.contains(.miniaturizable))
         XCTAssertTrue(window.standardWindowButton(.closeButton)?.isHidden == true)
         XCTAssertTrue(window.standardWindowButton(.miniaturizeButton)?.isHidden == true)
+        XCTAssertEqual(window.contentLayoutRect.size.width, 540, accuracy: 1)
+        XCTAssertEqual(window.contentLayoutRect.size.height, 310, accuracy: 1)
+    }
+
+    func testLinkControlIsCenteredInTheBottomFooter() {
+        let controller = PlayerViewController()
+        let window = AppWindowFactory.make(contentViewController: controller)
+        window.contentView?.layoutSubtreeIfNeeded()
+
+        let linkFrame = controller.linkButton.convert(controller.linkButton.bounds, to: controller.view)
+        XCTAssertEqual(linkFrame.midX, controller.view.bounds.midX, accuracy: 2)
+        XCTAssertLessThan(linkFrame.midY, 55)
     }
 
     func testUsesEnglishActionsAndExposesEveryTheme() {
