@@ -1,8 +1,8 @@
-# YouTube Audio Lite — Design
+# Leanwave — Design
 
 ## Obiettivo
 
-Creare una piccola applicazione macOS nativa che riproduca solamente l'audio di un singolo video YouTube. Quando la riproduzione è realmente iniziata, l'utente può scegliere se chiudere la sola scheda YouTube, chiudere completamente Google Chrome oppure lasciare tutto aperto.
+Creare una piccola applicazione macOS nativa chiamata Leanwave che riproduca solamente l'audio di un singolo video YouTube. Quando la riproduzione è realmente iniziata, l'utente può scegliere se chiudere la sola scheda YouTube, chiudere completamente Google Chrome oppure lasciare tutto aperto.
 
 L'applicazione deve essere installabile in `/Applications`, avere controlli completi da lettore audio e offrire sei temi grafici moderni. Il repository pubblico conterrà sorgenti, test e procedura di build, ma non dipendenze o binari pesanti.
 
@@ -31,6 +31,8 @@ La finestra principale contiene:
 - selettore del tema.
 
 I temi sono palette statiche e leggere: Carbon, Arctic, Sunset, Forest, Violet e Paper. La selezione viene salvata in `UserDefaults`.
+
+La GUI usa una gerarchia visiva essenziale: finestra compatta, tipografia di sistema, spaziatura ampia, superfici piatte con angoli moderatamente arrotondati e un solo colore d'accento per tema. Non usa immagini remote, WebView, trasparenze estese o animazioni decorative. I controlli devono restare immediatamente leggibili e accessibili in ogni tema.
 
 ## Flusso
 
@@ -67,7 +69,7 @@ Le interfacce separano la validazione, l'automazione di Chrome e l'esecuzione de
 
 ## Build e installazione
 
-Il progetto usa Swift Package Manager per compilazione e test. Uno script riproducibile assembla il bundle `.app`, crea `Info.plist`, firma ad hoc il bundle e lo installa in `/Applications/YouTube Audio Lite.app`.
+Il progetto usa Swift Package Manager per compilazione e test. Uno script riproducibile assembla il bundle `.app`, crea `Info.plist`, firma ad hoc il bundle e lo installa in `/Applications/Leanwave.app`.
 
 Poiché l'app usa Apple Events per controllare Chrome, `Info.plist` dichiara la relativa motivazione d'uso. Al primo accesso macOS può chiedere il consenso Automation.
 
@@ -82,4 +84,4 @@ Poiché l'app usa Apple Events per controllare Chrome, `Info.plist` dichiara la 
 
 ## Distribuzione
 
-Il repository GitHub pubblico si chiamerà `youtube-audio-lite`. Conterrà codice, test, README e script; non conterrà credenziali, cache, media o artefatti di build. La release iniziale verrà pubblicata solo dopo le verifiche locali disponibili.
+Il repository GitHub pubblico si chiamerà `leanwave`. Conterrà codice, test, README e script; non conterrà credenziali, cache, media o artefatti di build. La release iniziale verrà pubblicata solo dopo le verifiche locali disponibili.
