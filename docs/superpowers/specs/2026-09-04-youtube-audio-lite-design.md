@@ -23,7 +23,7 @@ Tutti i testi visibili nell'applicazione, inclusi pulsanti, stati, conferme ed e
 La finestra principale contiene:
 
 - campo per l'URL;
-- azioni `Paste`, `Use Chrome` e `Play`;
+- azioni `Paste`, `Fetch Again` e `Play`;
 - titolo/stato della riproduzione;
 - pulsanti indietro 15 secondi, play/pausa, avanti 15 secondi e stop;
 - barra temporale con tempo trascorso e durata;
@@ -34,15 +34,16 @@ I temi sono palette statiche e leggere: Carbon, Arctic, Sunset, Forest, Violet e
 
 ## Flusso
 
-1. L'utente inserisce un URL oppure sceglie `Usa Chrome`.
-2. Per `Usa Chrome`, AppleScript legge l'URL della scheda attiva della finestra principale di Google Chrome. L'app gestisce esplicitamente Chrome non aperto, finestra assente e permesso Automation negato.
-3. L'URL viene accettato soltanto se usa HTTP o HTTPS e l'host è `youtube.com`, un suo sottodominio, oppure `youtu.be`.
-4. L'app avvia `mpv` senza video, delegando l'estrazione a `yt-dlp`, con playlist disabilitate e cache contenuta.
-5. L'app controlla `mpv` tramite socket JSON IPC locale. Quando un evento/proprietà dimostra l'avvio effettivo della riproduzione, presenta una finestra con tre scelte in inglese: `Close YouTube Tab`, `Quit Chrome` e `Keep Open`.
-6. `Close YouTube Tab` chiude soltanto la scheda esatta acquisita da Chrome. Per un URL inserito manualmente, l'app cerca una scheda con lo stesso URL; se non la trova, mantiene Chrome aperto e lo segnala.
-7. `Quit Chrome` termina l'intera applicazione tramite AppleScript. `Keep Open` non modifica Chrome.
-8. La stessa sessione IPC alimenta stato, posizione, durata e controlli del lettore.
-9. Stop, chiusura finestra o terminazione dell'app arrestano il processo figlio e rimuovono il socket temporaneo.
+1. All'apertura, l'app prova automaticamente a leggere l'URL della scheda attiva della finestra principale di Google Chrome. Compila il campo soltanto se trova un URL YouTube valido; non avvia la riproduzione automaticamente.
+2. L'utente può modificare o incollare manualmente l'URL in qualsiasi momento. `Fetch Again` ripete l'acquisizione dalla scheda Chrome attualmente attiva, così può recuperare una pagina aperta successivamente.
+3. L'app gestisce esplicitamente Chrome non aperto, finestra assente e permesso Automation negato. Un fallimento del recupero automatico non blocca l'inserimento manuale.
+4. L'URL viene accettato soltanto se usa HTTP o HTTPS e l'host è `youtube.com`, un suo sottodominio, oppure `youtu.be`.
+5. L'app avvia `mpv` senza video, delegando l'estrazione a `yt-dlp`, con playlist disabilitate e cache contenuta.
+6. L'app controlla `mpv` tramite socket JSON IPC locale. Quando un evento/proprietà dimostra l'avvio effettivo della riproduzione, presenta una finestra con tre scelte in inglese: `Close YouTube Tab`, `Quit Chrome` e `Keep Open`.
+7. `Close YouTube Tab` chiude soltanto la scheda esatta acquisita da Chrome. Per un URL inserito manualmente, l'app cerca una scheda con lo stesso URL; se non la trova, mantiene Chrome aperto e lo segnala.
+8. `Quit Chrome` termina l'intera applicazione tramite AppleScript. `Keep Open` non modifica Chrome.
+9. La stessa sessione IPC alimenta stato, posizione, durata e controlli del lettore.
+10. Stop, chiusura finestra o terminazione dell'app arrestano il processo figlio e rimuovono il socket temporaneo.
 
 ## Componenti
 
