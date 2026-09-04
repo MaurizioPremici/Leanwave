@@ -47,6 +47,8 @@ enum AppWindowFactory {
         window.contentViewController = contentViewController
 
         window.setContentSize(size)
+        window.contentMinSize = size
+        window.contentMaxSize = size
 
         // Dimensione fissa
         window.minSize = window.frame.size

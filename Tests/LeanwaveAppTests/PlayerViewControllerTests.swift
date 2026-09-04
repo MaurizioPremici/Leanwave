@@ -27,6 +27,8 @@ final class PlayerViewControllerTests: XCTestCase {
         XCTAssertEqual(window.contentLayoutRect.size.width, 520, accuracy: 1)
         XCTAssertEqual(window.contentLayoutRect.size.height, 182, accuracy: 1)
         XCTAssertEqual(window.minSize, window.maxSize)
+        XCTAssertEqual(window.contentMinSize, NSSize(width: 520, height: 210))
+        XCTAssertEqual(window.contentMaxSize, NSSize(width: 520, height: 210))
     }
 
     func testLayoutDoesNotContainNegativeFixedDimensions() {
@@ -43,16 +45,40 @@ final class PlayerViewControllerTests: XCTestCase {
         XCTAssertTrue(invalidConstraints.isEmpty)
     }
 
-    func testLinkControlIsCenteredInTheBottomFooter() {
+    func testWindowSizeIsIdenticalForIdleAndLoadedChromeChoiceStates() {
+        let controller = PlayerViewController()
+        let window = AppWindowFactory.make(contentViewController: controller)
+        window.contentView?.layoutSubtreeIfNeeded()
+        let idleSize = window.contentView?.bounds.size
+
+        var loaded = PlayerState()
+        loaded.phase = .playing
+        loaded.title = "A deliberately long YouTube title that must truncate inside the compact player"
+        loaded.duration = 3 * 60 * 60 + 18 * 60 + 53
+        loaded.isPaused = false
+        loaded.closeChoicePending = true
+        controller.render(loaded)
+        window.contentView?.layoutSubtreeIfNeeded()
+
+        XCTAssertEqual(idleSize, NSSize(width: 520, height: 210))
+        XCTAssertEqual(window.contentView?.bounds.size, idleSize)
+    }
+
+    func testLinkControlIsCompactAndSitsAboveTransportPlayButton() {
         let controller = PlayerViewController()
         let window = AppWindowFactory.make(contentViewController: controller)
         window.contentView?.layoutSubtreeIfNeeded()
 
         let linkFrame = controller.linkButton.convert(controller.linkButton.bounds, to: controller.view)
-        XCTAssertEqual(linkFrame.midX, controller.view.bounds.midX, accuracy: 2)
-        XCTAssertGreaterThan(linkFrame.midY, 60)
-        XCTAssertGreaterThanOrEqual(linkFrame.minY, controller.view.bounds.minY)
-        XCTAssertLessThanOrEqual(linkFrame.maxY, controller.view.bounds.maxY)
+        let playFrame = controller.playPauseButton.convert(controller.playPauseButton.bounds, to: controller.view)
+
+        XCTAssertEqual(linkFrame.midX, playFrame.midX, accuracy: 1, "Link: \(linkFrame), play: \(playFrame)")
+        XCTAssertGreaterThanOrEqual(linkFrame.minY - playFrame.maxY, 6, "Link: \(linkFrame), play: \(playFrame)")
+        XCTAssertLessThanOrEqual(linkFrame.minY - playFrame.maxY, 10, "Link: \(linkFrame), play: \(playFrame)")
+        XCTAssertGreaterThanOrEqual(linkFrame.width, 90)
+        XCTAssertLessThanOrEqual(linkFrame.width, 105)
+        XCTAssertGreaterThanOrEqual(linkFrame.height, 30)
+        XCTAssertLessThanOrEqual(linkFrame.height, 35)
     }
 
     func testLinkControlReceivesClicksAtItsVisibleCenter() {
@@ -68,15 +94,22 @@ final class PlayerViewControllerTests: XCTestCase {
         XCTAssertTrue(controller.view.hitTest(center) === controller.linkButton)
     }
 
-    func testYouTubeControlIsCenteredHorizontallyInTheWindow() {
+    func testYouTubeControlBelongsToTheRightHeaderGroup() {
         let controller = PlayerViewController()
         let window = AppWindowFactory.make(contentViewController: controller)
         window.contentView?.layoutSubtreeIfNeeded()
 
         let frame = controller.youtubeButton.convert(controller.youtubeButton.bounds, to: controller.view)
         let themeFrame = controller.themePopup.convert(controller.themePopup.bounds, to: controller.view)
-        XCTAssertEqual(frame.midX, controller.view.bounds.midX, accuracy: 1)
-        XCTAssertFalse(frame.intersects(themeFrame), "YouTube: \(frame), theme: \(themeFrame)")
+        let gap = themeFrame.minX - frame.maxX
+
+        XCTAssertGreaterThanOrEqual(gap, 4, "YouTube: \(frame), theme: \(themeFrame)")
+        XCTAssertLessThanOrEqual(gap, 12, "YouTube: \(frame), theme: \(themeFrame)")
+        XCTAssertEqual(frame.midY, themeFrame.midY, accuracy: 2)
+        XCTAssertEqual(
+            controller.youtubeButton.alignmentRect(forFrame: controller.youtubeButton.frame).size,
+            NSSize(width: 44, height: 44)
+        )
     }
 
     func testOpeningLinkPanelFetchesTheCurrentChromeYouTubeURL() {
@@ -132,6 +165,7 @@ final class PlayerViewControllerTests: XCTestCase {
     private func allConstraints(in view: NSView) -> [NSLayoutConstraint] {
         view.constraints + view.subviews.flatMap(allConstraints(in:))
     }
+
 }
 
 private final class AppRecordingScriptExecutor: AppleScriptExecuting {

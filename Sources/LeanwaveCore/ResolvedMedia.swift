@@ -32,7 +32,7 @@ enum YTDLPMediaResolver {
         process.executableURL = URL(fileURLWithPath: executablePath)
         process.arguments = [
             "--no-cookies", "--no-playlist",
-            "--extractor-args", "youtube:player_client=web_embedded",
+            "--extractor-args", "youtube:player_client=default,web_embedded",
             "--format", "bestaudio/best",
             "--dump-single-json", "--", url.normalizedString,
         ]

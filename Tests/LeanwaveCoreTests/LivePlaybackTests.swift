@@ -7,12 +7,16 @@ final class LivePlaybackTests: XCTestCase {
         guard ProcessInfo.processInfo.environment["LEANWAVE_LIVE_TEST"] == "1" else {
             throw XCTSkip("Set LEANWAVE_LIVE_TEST=1 to run the live YouTube check.")
         }
-        let youtube = try XCTUnwrap(YouTubeURL("https://www.youtube.com/watch?v=araHHgik8FQ"))
+        let source = ProcessInfo.processInfo.environment["LEANWAVE_LIVE_URL"]
+            ?? "https://www.youtube.com/watch?v=araHHgik8FQ"
+        let youtube = try XCTUnwrap(YouTubeURL(source))
         let player = PlayerController()
         defer { player.stop() }
 
         try player.play(url: youtube)
-        XCTAssertTrue(waitUntil(player: player, timeout: 20) { $0.phase == .playing }, "Playback did not start: \(player.state)")
+        let didStart = waitUntil(player: player, timeout: 20) { $0.phase == .playing }
+        XCTAssertTrue(didStart, "Playback did not start: \(player.state)")
+        guard didStart else { return }
         player.setVolume(0)
 
         player.toggleMute()

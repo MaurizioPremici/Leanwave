@@ -64,19 +64,15 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         configureControls()
         let content = makeContentStack()
         root.addSubview(content)
-        root.addSubview(youtubeButton)
-        root.addSubview(linkButton)
-        youtubeButton.translatesAutoresizingMaskIntoConstraints = false
+        playerCard.addSubview(linkButton)
         linkButton.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             content.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 14),
             content.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -14),
             content.topAnchor.constraint(equalTo: root.topAnchor, constant: 10),
             content.bottomAnchor.constraint(equalTo: root.bottomAnchor),
-            youtubeButton.centerXAnchor.constraint(equalTo: root.centerXAnchor),
-            youtubeButton.topAnchor.constraint(equalTo: root.topAnchor, constant: 10),
-            linkButton.centerXAnchor.constraint(equalTo: playerCard.centerXAnchor),
-            linkButton.bottomAnchor.constraint(equalTo: root.bottomAnchor, constant: -46),
+            linkButton.centerXAnchor.constraint(equalTo: playPauseButton.centerXAnchor),
+            linkButton.bottomAnchor.constraint(equalTo: playPauseButton.topAnchor, constant: -9),
         ])
 
         player.onStateChange = { [weak self] state in
@@ -178,11 +174,15 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         titleLabel.font = .systemFont(ofSize: 17, weight: .medium)
         titleLabel.alignment = .center
         titleLabel.lineBreakMode = .byTruncatingTail
+        titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         statusLabel.font = .systemFont(ofSize: 10)
         statusLabel.alignment = .center
         statusLabel.lineBreakMode = .byTruncatingTail
+        statusLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         elapsedLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .medium)
         durationLabel.font = .monospacedDigitSystemFont(ofSize: 11, weight: .medium)
+        elapsedLabel.alignment = .left
+        durationLabel.alignment = .right
         sourceCard.wantsLayer = true
         playerCard.wantsLayer = true
         pulseRing.wantsLayer = true
@@ -226,15 +226,18 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         identity.orientation = .vertical
         identity.alignment = .leading
         identity.spacing = 3
+        identity.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        tagline.lineBreakMode = .byTruncatingTail
+        tagline.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         let headerSpacer = NSView()
         headerSpacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
         let windowControls = NSStackView(views: [minimizeButton, closeButton])
         windowControls.orientation = .horizontal
         windowControls.spacing = 8
-        let header = NSStackView(views: [logoBadge, identity, headerSpacer, themePopup, windowControls])
+        let header = NSStackView(views: [logoBadge, identity, headerSpacer, youtubeButton, themePopup, windowControls])
         header.orientation = .horizontal
         header.alignment = .centerY
-        header.spacing = 10
+        header.spacing = 8
         header.heightAnchor.constraint(equalToConstant: 48).isActive = true
 
         sourceCaption.font = .systemFont(ofSize: 10, weight: .semibold)
@@ -294,6 +297,8 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         NSLayoutConstraint.activate([
             chromeRow.centerXAnchor.constraint(equalTo: chromeChoiceBar.centerXAnchor),
             chromeRow.centerYAnchor.constraint(equalTo: chromeChoiceBar.centerYAnchor),
+            chromeRow.leadingAnchor.constraint(greaterThanOrEqualTo: chromeChoiceBar.leadingAnchor, constant: 8),
+            chromeRow.trailingAnchor.constraint(lessThanOrEqualTo: chromeChoiceBar.trailingAnchor, constant: -8),
             chromeChoiceBar.heightAnchor.constraint(equalToConstant: 30),
         ])
 
@@ -301,8 +306,8 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         timeline.orientation = .horizontal
         timeline.alignment = .centerY
         timeline.spacing = 10
-        elapsedLabel.widthAnchor.constraint(equalToConstant: 46).isActive = true
-        durationLabel.widthAnchor.constraint(equalToConstant: 46).isActive = true
+        elapsedLabel.widthAnchor.constraint(equalToConstant: 58).isActive = true
+        durationLabel.widthAnchor.constraint(equalToConstant: 58).isActive = true
 
         let playContainer = NSView()
         playContainer.addSubview(pulseRing)
@@ -436,7 +441,7 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         if button === playPauseButton {
             size = 48
         } else if button === youtubeButton {
-            size = 42
+            size = 44
         } else {
             size = 40
         }
@@ -518,7 +523,7 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         view.viewWithTag(505).flatMap { $0 as? NSTextField }?.textColor = accent
     }
 
-    private func render(_ state: PlayerState) {
+    func render(_ state: PlayerState) {
         lastState = state
         titleLabel.stringValue = state.phase == .idle ? "Ready to play" : state.title
         elapsedLabel.stringValue = TimeText.format(state.position)

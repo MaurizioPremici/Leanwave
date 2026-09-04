@@ -14,6 +14,23 @@ final class HTTPRangeProxy: @unchecked Sendable {
         self.headers = headers
     }
 
+    static func forwardedRangeHeader(for request: String) -> String {
+        let rangeValue = request.components(separatedBy: "\r\n")
+            .first(where: { $0.lowercased().hasPrefix("range:") })?
+            .split(separator: ":", maxSplits: 1)
+            .last?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+            .replacingOccurrences(of: "bytes=", with: "")
+        let bounds = rangeValue?.split(separator: "-", maxSplits: 1, omittingEmptySubsequences: false)
+        let start = bounds?.first.flatMap { Int64($0) } ?? 0
+        let requestedEnd = bounds.flatMap { $0.count == 2 ? Int64($0[1]) : nil }
+        let (candidateEnd, overflowed) = start.addingReportingOverflow(512 * 1_024 - 1)
+        let maximumEnd = overflowed ? Int64.max : candidateEnd
+        let end = max(start, min(requestedEnd ?? maximumEnd, maximumEnd))
+        return "Range: bytes=\(start)-\(end)"
+    }
+
     func start() throws -> URL {
         let listener = try NWListener(using: .tcp, on: .any)
         let ready = DispatchSemaphore(value: 0)
@@ -70,20 +87,7 @@ final class HTTPRangeProxy: @unchecked Sendable {
         ]
         if request.hasPrefix("HEAD ") { arguments.append("--head") }
         for (name, value) in headers { arguments += ["--header", "\(name): \(value)"] }
-        let requestedRange = request.components(separatedBy: "\r\n")
-            .first(where: { $0.lowercased().hasPrefix("range:") })?
-            .components(separatedBy: ":")
-            .dropFirst()
-            .joined(separator: ":")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        let startText = requestedRange?
-            .lowercased()
-            .replacingOccurrences(of: "bytes=", with: "")
-            .components(separatedBy: "-")
-            .first
-        let start = startText.flatMap(Int64.init) ?? 0
-        let end = start + 1_024 * 1_024 - 1
-        arguments += ["--header", "Range: bytes=\(start)-\(end)"]
+        arguments += ["--header", Self.forwardedRangeHeader(for: request)]
         arguments += ["--", remoteURL.absoluteString]
         transfer.arguments = arguments
         let output = Pipe()
