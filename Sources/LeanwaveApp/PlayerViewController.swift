@@ -64,13 +64,17 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         configureControls()
         let content = makeContentStack()
         root.addSubview(content)
+        root.addSubview(youtubeButton)
         root.addSubview(linkButton)
+        youtubeButton.translatesAutoresizingMaskIntoConstraints = false
         linkButton.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             content.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 14),
             content.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -14),
             content.topAnchor.constraint(equalTo: root.topAnchor, constant: 10),
             content.bottomAnchor.constraint(equalTo: root.bottomAnchor),
+            youtubeButton.centerXAnchor.constraint(equalTo: root.centerXAnchor),
+            youtubeButton.topAnchor.constraint(equalTo: root.topAnchor, constant: 10),
             linkButton.centerXAnchor.constraint(equalTo: root.centerXAnchor),
             linkButton.bottomAnchor.constraint(equalTo: root.bottomAnchor, constant: -46),
         ])
@@ -147,7 +151,8 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         themePopup.action = #selector(themeChanged)
         themePopup.setAccessibilityLabel("Accent color")
         themePopup.controlSize = .regular
-        themePopup.widthAnchor.constraint(equalToConstant: 156).isActive = true
+        themePopup.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        themePopup.widthAnchor.constraint(equalToConstant: 120).isActive = true
         themePopup.heightAnchor.constraint(equalToConstant: 36).isActive = true
 
         configureChoiceButton(closeTabChoiceButton, action: #selector(closeYouTubeTab))
@@ -226,7 +231,7 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         let windowControls = NSStackView(views: [minimizeButton, closeButton])
         windowControls.orientation = .horizontal
         windowControls.spacing = 8
-        let header = NSStackView(views: [logoBadge, identity, headerSpacer, youtubeButton, themePopup, windowControls])
+        let header = NSStackView(views: [logoBadge, identity, headerSpacer, themePopup, windowControls])
         header.orientation = .horizontal
         header.alignment = .centerY
         header.spacing = 10
@@ -686,6 +691,9 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         let opening = sourceCard.isHidden
         sourceCard.isHidden = !opening
         playerCard.isHidden = opening
+        if opening {
+            fetchFromChrome(showErrors: true)
+        }
         linkButton.contentTintColor = sourceCard.isHidden
             ? NSColor(currentTheme.palette.primaryText)
             : NSColor(currentTheme.palette.accent)

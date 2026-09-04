@@ -68,6 +68,33 @@ final class PlayerViewControllerTests: XCTestCase {
         XCTAssertTrue(controller.view.hitTest(center) === controller.linkButton)
     }
 
+    func testYouTubeControlIsCenteredHorizontallyInTheWindow() {
+        let controller = PlayerViewController()
+        let window = AppWindowFactory.make(contentViewController: controller)
+        window.contentView?.layoutSubtreeIfNeeded()
+
+        let frame = controller.youtubeButton.convert(controller.youtubeButton.bounds, to: controller.view)
+        let themeFrame = controller.themePopup.convert(controller.themePopup.bounds, to: controller.view)
+        XCTAssertEqual(frame.midX, controller.view.bounds.midX, accuracy: 1)
+        XCTAssertFalse(frame.intersects(themeFrame), "YouTube: \(frame), theme: \(themeFrame)")
+    }
+
+    func testOpeningLinkPanelFetchesTheCurrentChromeYouTubeURL() {
+        let executor = AppRecordingScriptExecutor(
+            responses: ["42\t3\thttps://youtu.be/current-video"]
+        )
+        let controller = PlayerViewController(
+            chrome: ChromeController(executor: executor)
+        )
+        controller.loadView()
+
+        controller.linkButton.performClick(nil)
+
+        XCTAssertFalse(controller.sourceCardIsHidden)
+        XCTAssertEqual(controller.urlField.stringValue, "https://youtu.be/current-video")
+        XCTAssertEqual(executor.executionCount, 1)
+    }
+
     func testUsesEnglishActionsAndExposesEveryTheme() {
         let controller = PlayerViewController()
         controller.loadView()
@@ -104,5 +131,19 @@ final class PlayerViewControllerTests: XCTestCase {
 
     private func allConstraints(in view: NSView) -> [NSLayoutConstraint] {
         view.constraints + view.subviews.flatMap(allConstraints(in:))
+    }
+}
+
+private final class AppRecordingScriptExecutor: AppleScriptExecuting {
+    private var responses: [String]
+    private(set) var executionCount = 0
+
+    init(responses: [String]) {
+        self.responses = responses
+    }
+
+    func execute(_ source: String) throws -> String {
+        executionCount += 1
+        return responses.isEmpty ? "" : responses.removeFirst()
     }
 }
