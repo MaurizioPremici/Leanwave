@@ -17,6 +17,7 @@ Tutti i testi visibili nell'applicazione, inclusi pulsanti, stati, conferme ed e
 - Nessun download permanente del contenuto multimediale.
 - Nessuna scheda o applicazione viene chiusa automaticamente.
 - La scelta di chiusura viene richiesta soltanto dopo una conferma osservabile dell'avvio della riproduzione.
+- La finestra resta al livello `floating`, sopra le normali finestre delle altre applicazioni, ma rimane riducibile e chiudibile.
 
 ## Interfaccia
 
@@ -29,10 +30,11 @@ La finestra principale contiene:
 - barra temporale con tempo trascorso e durata;
 - controllo volume e mute;
 - selettore del tema.
+- controlli visibili `−` e `×` per ridurre e chiudere la finestra.
 
 I temi sono palette statiche e leggere: Carbon, Arctic, Sunset, Forest, Violet e Paper. La selezione viene salvata in `UserDefaults`.
 
-La GUI usa una gerarchia visiva essenziale: finestra compatta, tipografia di sistema, spaziatura ampia, superfici piatte con angoli moderatamente arrotondati e un solo colore d'accento per tema. Non usa immagini remote, WebView, trasparenze estese o animazioni decorative. I controlli devono restare immediatamente leggibili e accessibili in ogni tema.
+La GUI usa una gerarchia visiva essenziale ma curata: testata personalizzata, tipografia di sistema, spaziatura ampia, card con bordo sottile e ombra contenuta, angoli arrotondati e un solo colore d'accento per tema. Non usa immagini remote, WebView, trasparenze estese o animazioni decorative. I controlli devono restare immediatamente leggibili e accessibili in ogni tema.
 
 ## Flusso
 

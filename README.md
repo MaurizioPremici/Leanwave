@@ -40,6 +40,8 @@ Leanwave never closes a tab or Chrome without this explicit choice. If a tab can
 
 Choose Carbon, Arctic, Sunset, Forest, Violet, or Paper. Leanwave remembers the selected theme locally in macOS user defaults.
 
+The compact player stays above ordinary application windows. Use the visible `−` and `×` controls to minimize or close it.
+
 ## Memory design
 
 The interface is native AppKit and uses no remote images or decorative animation. Audio buffering is bounded in the `mpv` launch configuration. The app process and the separate `mpv` process should be measured independently when comparing memory use.

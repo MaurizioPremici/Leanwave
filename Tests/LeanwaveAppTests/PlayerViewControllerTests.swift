@@ -5,6 +5,27 @@ import XCTest
 
 @MainActor
 final class PlayerViewControllerTests: XCTestCase {
+    func testCustomWindowControlsUseExpectedSymbolsAndLabels() {
+        let controller = PlayerViewController()
+        controller.loadView()
+
+        XCTAssertEqual(controller.minimizeButton.title, "−")
+        XCTAssertEqual(controller.minimizeButton.accessibilityLabel(), "Minimize window")
+        XCTAssertEqual(controller.closeButton.title, "×")
+        XCTAssertEqual(controller.closeButton.accessibilityLabel(), "Close window")
+    }
+
+    func testAppWindowFloatsAndKeepsNativeWindowActionsAvailable() {
+        let controller = PlayerViewController()
+        let window = AppWindowFactory.make(contentViewController: controller)
+
+        XCTAssertEqual(window.level, .floating)
+        XCTAssertTrue(window.styleMask.contains(.closable))
+        XCTAssertTrue(window.styleMask.contains(.miniaturizable))
+        XCTAssertTrue(window.standardWindowButton(.closeButton)?.isHidden == true)
+        XCTAssertTrue(window.standardWindowButton(.miniaturizeButton)?.isHidden == true)
+    }
+
     func testUsesEnglishActionsAndExposesEveryTheme() {
         let controller = PlayerViewController()
         controller.loadView()
