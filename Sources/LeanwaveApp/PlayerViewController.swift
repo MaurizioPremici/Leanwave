@@ -354,9 +354,9 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         footer.addSubview(linkButton)
         linkButton.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            footer.heightAnchor.constraint(equalToConstant: 34),
+            footer.heightAnchor.constraint(equalToConstant: 1),
             linkButton.centerXAnchor.constraint(equalTo: footer.centerXAnchor),
-            linkButton.centerYAnchor.constraint(equalTo: footer.centerYAnchor, constant: 2),
+            linkButton.centerYAnchor.constraint(equalTo: footer.centerYAnchor, constant: -55),
         ])
 
         let stack = NSStackView(views: [header, sourceCard, playerCard, footer])

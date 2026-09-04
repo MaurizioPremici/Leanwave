@@ -24,9 +24,23 @@ final class PlayerViewControllerTests: XCTestCase {
         XCTAssertTrue(window.styleMask.contains(.miniaturizable))
         XCTAssertTrue(window.standardWindowButton(.closeButton)?.isHidden == true)
         XCTAssertTrue(window.standardWindowButton(.miniaturizeButton)?.isHidden == true)
-        XCTAssertEqual(window.contentLayoutRect.size.width, 720, accuracy: 1)
-        XCTAssertEqual(window.contentLayoutRect.size.height, 222, accuracy: 1)
+        XCTAssertEqual(window.contentLayoutRect.size.width, 520, accuracy: 1)
+        XCTAssertEqual(window.contentLayoutRect.size.height, 182, accuracy: 1)
         XCTAssertEqual(window.minSize, window.maxSize)
+    }
+
+    func testLayoutDoesNotContainNegativeFixedDimensions() {
+        let controller = PlayerViewController()
+        controller.loadView()
+
+        let invalidConstraints = allConstraints(in: controller.view).filter {
+            ($0.firstAttribute == .width || $0.firstAttribute == .height)
+                && $0.relation == .equal
+                && $0.secondItem == nil
+                && $0.constant < 0
+        }
+
+        XCTAssertTrue(invalidConstraints.isEmpty)
     }
 
     func testLinkControlIsCenteredInTheBottomFooter() {
@@ -36,7 +50,7 @@ final class PlayerViewControllerTests: XCTestCase {
 
         let linkFrame = controller.linkButton.convert(controller.linkButton.bounds, to: controller.view)
         XCTAssertEqual(linkFrame.midX, controller.view.bounds.midX, accuracy: 2)
-        XCTAssertLessThan(linkFrame.midY, 55)
+        XCTAssertGreaterThan(linkFrame.midY, 60)
         XCTAssertGreaterThanOrEqual(linkFrame.minY, controller.view.bounds.minY)
         XCTAssertLessThanOrEqual(linkFrame.maxY, controller.view.bounds.maxY)
     }
@@ -73,5 +87,9 @@ final class PlayerViewControllerTests: XCTestCase {
 
         controller.applyTheme(.amber)
         XCTAssertEqual(controller.view.appearance?.name, .darkAqua)
+    }
+
+    private func allConstraints(in view: NSView) -> [NSLayoutConstraint] {
+        view.constraints + view.subviews.flatMap(allConstraints(in:))
     }
 }

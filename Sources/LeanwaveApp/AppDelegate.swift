@@ -5,7 +5,7 @@ enum AppWindowFactory {
 
     static func make(contentViewController: NSViewController) -> NSWindow {
 
-        let size = NSSize(width: 720, height: 250)
+        let size = NSSize(width: 520, height: 210)
 
         let window = NSWindow(
             contentRect: NSRect(
