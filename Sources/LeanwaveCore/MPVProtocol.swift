@@ -31,6 +31,7 @@ public enum MPVProtocolError: Error, Equatable {
 public enum MPVCommand: Equatable, Sendable {
     case setPause(Bool)
     case seekRelative(Double)
+    case seekAbsolute(Double)
     case setVolume(Double)
     case setMute(Bool)
     case stop
@@ -44,6 +45,9 @@ public enum MPVCommand: Equatable, Sendable {
         case .seekRelative(let seconds):
             guard seconds.isFinite else { throw MPVProtocolError.nonFiniteNumber }
             command = ["seek", seconds, "relative"]
+        case .seekAbsolute(let seconds):
+            guard seconds.isFinite else { throw MPVProtocolError.nonFiniteNumber }
+            command = ["seek", max(0, seconds), "absolute"]
         case .setVolume(let volume):
             guard volume.isFinite else { throw MPVProtocolError.nonFiniteNumber }
             command = ["set_property", "volume", min(max(volume, 0), 100)]

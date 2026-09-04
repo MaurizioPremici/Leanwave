@@ -26,6 +26,7 @@ final class MPVProtocolTests: XCTestCase {
         let cases: [(MPVCommand, [Any])] = [
             (.setPause(true), ["set_property", "pause", true]),
             (.seekRelative(15), ["seek", 15.0, "relative"]),
+            (.seekAbsolute(42), ["seek", 42.0, "absolute"]),
             (.setVolume(65), ["set_property", "volume", 65.0]),
             (.setMute(true), ["set_property", "mute", true]),
             (.stop, ["stop"]),

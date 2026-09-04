@@ -96,6 +96,10 @@ public final class PlayerController: @unchecked Sendable {
         queue.async { self.send(.seekRelative(seconds)) }
     }
 
+    public func seek(to position: Double) {
+        queue.async { self.send(.seekAbsolute(position)) }
+    }
+
     public func setVolume(_ volume: Double) {
         queue.async { self.send(.setVolume(volume)) }
     }
