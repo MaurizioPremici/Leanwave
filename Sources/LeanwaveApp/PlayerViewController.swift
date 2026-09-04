@@ -31,6 +31,7 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
     private var fetchedReference: ChromeTabReference?
     private var playingURL: YouTubeURL?
     private var lastState = PlayerState()
+    private var isPresentingChromeChoice = false
 
     init(player: PlayerController = PlayerController(), chrome: ChromeController = ChromeController()) {
         self.player = player
@@ -382,7 +383,7 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         case .failed(let message): statusLabel.stringValue = message
         }
 
-        if state.closeChoicePending { presentChromeChoice() }
+        if state.closeChoicePending, !isPresentingChromeChoice { presentChromeChoice() }
     }
 
     private func updateSymbol(_ button: NSButton, symbol: String, fallback: String) {
@@ -397,6 +398,8 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
     }
 
     private func presentChromeChoice() {
+        isPresentingChromeChoice = true
+        defer { isPresentingChromeChoice = false }
         player.markCloseChoiceHandled()
         let alert = NSAlert()
         alert.messageText = "Audio is playing"

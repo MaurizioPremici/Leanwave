@@ -31,7 +31,7 @@ final class HTTPRangeProxy: @unchecked Sendable {
     }
 
     func stop() {
-        queue.sync {
+        queue.async { [self] in
             listener?.cancel()
             listener = nil
             connections.forEach { $0.cancel() }
@@ -64,7 +64,10 @@ final class HTTPRangeProxy: @unchecked Sendable {
     private func startTransfer(request: String, connection: NWConnection) {
         let transfer = Process()
         transfer.executableURL = URL(fileURLWithPath: "/usr/bin/curl")
-        var arguments = ["--silent", "--show-error", "--location", "--http1.1", "--include", "--raw"]
+        var arguments = [
+            "--silent", "--show-error", "--location", "--http1.1", "--include", "--raw",
+            "--connect-timeout", "10", "--max-time", "30",
+        ]
         if request.hasPrefix("HEAD ") { arguments.append("--head") }
         for (name, value) in headers { arguments += ["--header", "\(name): \(value)"] }
         let requestedRange = request.components(separatedBy: "\r\n")
@@ -89,10 +92,14 @@ final class HTTPRangeProxy: @unchecked Sendable {
         do {
             try transfer.run()
             transfers.append(transfer)
-            let response = output.fileHandleForReading.readDataToEndOfFile()
-            transfer.waitUntilExit()
-            transfers.removeAll { $0 === transfer }
-            connection.send(content: response, contentContext: .defaultMessage, isComplete: true, completion: .contentProcessed { _ in connection.cancel() })
+            DispatchQueue.global(qos: .utility).async { [weak self] in
+                let response = output.fileHandleForReading.readDataToEndOfFile()
+                transfer.waitUntilExit()
+                self?.queue.async { [weak self] in
+                    self?.transfers.removeAll { $0 === transfer }
+                    connection.send(content: response, contentContext: .defaultMessage, isComplete: true, completion: .contentProcessed { _ in connection.cancel() })
+                }
+            }
         } catch {
             connection.cancel()
         }

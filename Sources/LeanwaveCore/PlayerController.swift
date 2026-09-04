@@ -55,7 +55,7 @@ public final class PlayerController: @unchecked Sendable {
             throw PlayerControllerError.missingDependency("yt-dlp")
         }
 
-        try queue.sync {
+        queue.async { [self] in
             stopLocked(emitEnded: false)
             let session = UUID()
             sessionID = session
@@ -101,7 +101,7 @@ public final class PlayerController: @unchecked Sendable {
                 proxy = nil
                 cleanupSocket(path)
                 emit(.failed(error.localizedDescription))
-                throw PlayerControllerError.launchFailed(error.localizedDescription)
+                return
             }
             connectWhenReady(path: path, session: session, remainingAttempts: 100)
         }
@@ -134,7 +134,7 @@ public final class PlayerController: @unchecked Sendable {
     }
 
     public func stop() {
-        queue.sync { stopLocked(emitEnded: true) }
+        queue.async { self.stopLocked(emitEnded: true) }
     }
 
     private func connectWhenReady(path: String, session: UUID, remainingAttempts: Int) {
