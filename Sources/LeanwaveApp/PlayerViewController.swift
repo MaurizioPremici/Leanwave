@@ -64,11 +64,15 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         configureControls()
         let content = makeContentStack()
         root.addSubview(content)
+        root.addSubview(linkButton)
+        linkButton.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             content.leadingAnchor.constraint(equalTo: root.leadingAnchor, constant: 14),
             content.trailingAnchor.constraint(equalTo: root.trailingAnchor, constant: -14),
             content.topAnchor.constraint(equalTo: root.topAnchor, constant: 10),
             content.bottomAnchor.constraint(equalTo: root.bottomAnchor),
+            linkButton.centerXAnchor.constraint(equalTo: root.centerXAnchor),
+            linkButton.bottomAnchor.constraint(equalTo: root.bottomAnchor, constant: -46),
         ])
 
         player.onStateChange = { [weak self] state in
@@ -351,13 +355,7 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
         ])
 
         let footer = NSView()
-        footer.addSubview(linkButton)
-        linkButton.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            footer.heightAnchor.constraint(equalToConstant: 1),
-            linkButton.centerXAnchor.constraint(equalTo: footer.centerXAnchor),
-            linkButton.centerYAnchor.constraint(equalTo: footer.centerYAnchor, constant: -55),
-        ])
+        footer.heightAnchor.constraint(equalToConstant: 1).isActive = true
 
         let stack = NSStackView(views: [header, sourceCard, playerCard, footer])
         stack.translatesAutoresizingMaskIntoConstraints = false

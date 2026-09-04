@@ -55,6 +55,19 @@ final class PlayerViewControllerTests: XCTestCase {
         XCTAssertLessThanOrEqual(linkFrame.maxY, controller.view.bounds.maxY)
     }
 
+    func testLinkControlReceivesClicksAtItsVisibleCenter() {
+        let controller = PlayerViewController()
+        let window = AppWindowFactory.make(contentViewController: controller)
+        window.contentView?.layoutSubtreeIfNeeded()
+
+        let center = controller.linkButton.convert(
+            NSPoint(x: controller.linkButton.bounds.midX, y: controller.linkButton.bounds.midY),
+            to: controller.view
+        )
+
+        XCTAssertTrue(controller.view.hitTest(center) === controller.linkButton)
+    }
+
     func testUsesEnglishActionsAndExposesEveryTheme() {
         let controller = PlayerViewController()
         controller.loadView()
