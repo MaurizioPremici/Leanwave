@@ -75,7 +75,7 @@ final class PlayerViewController: NSViewController, NSTextFieldDelegate, @unchec
             content.bottomAnchor.constraint(equalTo: root.bottomAnchor),
             youtubeButton.centerXAnchor.constraint(equalTo: root.centerXAnchor),
             youtubeButton.topAnchor.constraint(equalTo: root.topAnchor, constant: 10),
-            linkButton.centerXAnchor.constraint(equalTo: root.centerXAnchor),
+            linkButton.centerXAnchor.constraint(equalTo: playerCard.centerXAnchor),
             linkButton.bottomAnchor.constraint(equalTo: root.bottomAnchor, constant: -46),
         ])
 
